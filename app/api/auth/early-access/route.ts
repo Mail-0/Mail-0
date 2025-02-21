@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { earlyAccess } from "@/db/schema";
 import { env } from "@/lib/env";
 import { db } from "@/db";
 
@@ -53,11 +52,13 @@ export async function POST(req: NextRequest) {
       // Log the attempted insert
       console.log("Attempting to insert email:", email);
 
-      const result = await db.insert(earlyAccess).values({
-        id: crypto.randomUUID(),
-        email,
-        createdAt: nowDate,
-        updatedAt: nowDate,
+      const result = await db.earlyAccess.create({
+        data: {
+          id: crypto.randomUUID(),
+          email,
+          createdAt: nowDate,
+          updatedAt: nowDate,
+        },
       });
 
       console.log("Insert successful:", result);

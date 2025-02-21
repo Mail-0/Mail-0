@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDriver } from "@/app/api/driver";
-import { connection } from "@/db/schema";
 import { env } from "@/lib/env";
 import { db } from "@/db";
 
@@ -43,19 +42,21 @@ export async function GET(
     }
 
     // Store the connection in the database
-    await db.insert(connection).values({
-      providerId,
-      id: crypto.randomUUID(),
-      userId: state,
-      email: userInfo.data.emailAddresses[0].value,
-      name: userInfo.data.names?.[0]?.displayName || "Unknown",
-      picture: userInfo.data.photos?.[0]?.url || "",
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
-      scope: driver.getScope(),
-      expiresAt: new Date(Date.now() + (tokens.expiry_date || 3600000)),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    await db.connection.create({
+      data: {
+        providerId: providerId,
+        id: crypto.randomUUID(),
+        userId: state,
+        email: userInfo.data.emailAddresses[0].value,
+        name: userInfo.data.names?.[0]?.displayName || "Unknown",
+        picture: userInfo.data.photos?.[0]?.url || "",
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        scope: driver.getScope(),
+        expiresAt: new Date(Date.now() + (tokens.expiry_date || 3600000)),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
 
     return NextResponse.redirect(new URL("/connect-emails?success=true", request.url));

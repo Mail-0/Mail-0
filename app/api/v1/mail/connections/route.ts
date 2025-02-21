@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connection } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
 import { db } from "@/db";
 
 export async function GET(request: NextRequest) {
@@ -13,16 +11,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const connections = await db
-      .select({
-        id: connection.id,
-        email: connection.email,
-        name: connection.name,
-        picture: connection.picture,
-        createdAt: connection.createdAt,
-      })
-      .from(connection)
-      .where(eq(connection.userId, userId));
+    const connections = await db.connection.findMany({
+      where: {
+        userId: userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        picture: true,
+        createdAt: true,
+      },
+    });
 
     return NextResponse.json({ connections });
   } catch (error) {

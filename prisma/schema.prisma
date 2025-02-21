@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamp(6)
+  refreshTokenExpiresAt DateTime? @db.Timestamp(6)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @db.Timestamp(6)
+  updatedAt             DateTime  @db.Timestamp(6)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "account_user_id_user_id_fk")
+}
+
+model Connection {
+  id           String   @id
+  userId       String
+  email        String
+  name         String?
+  picture      String?
+  accessToken  String
+  refreshToken String?
+  scope        String
+  providerId   String
+  expiresAt    DateTime @db.Timestamp(6)
+  createdAt    DateTime @db.Timestamp(6)
+  updatedAt    DateTime @db.Timestamp(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "connection_user_id_user_id_fk")
+}
+
+model EarlyAccess {
+  id        String   @id
+  email     String   @unique(map: "early_access_email_unique")
+  createdAt DateTime @db.Timestamp(6)
+  updatedAt DateTime @db.Timestamp(6)
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @db.Timestamp(6)
+  token     String   @unique(map: "session_token_unique")
+  createdAt DateTime @db.Timestamp(6)
+  updatedAt DateTime @db.Timestamp(6)
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "session_user_id_user_id_fk")
+}
+
+model User {
+  id                  String       @id
+  name                String
+  email               String       @unique(map: "user_email_unique")
+  emailVerified       Boolean
+  image               String?
+  createdAt           DateTime     @db.Timestamp(6)
+  updatedAt           DateTime     @db.Timestamp(6)
+  defaultConnectionId String?
+  account             Account[]
+  connection          Connection[]
+  session             Session[]
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime  @db.Timestamp(6)
+  createdAt  DateTime? @db.Timestamp(6)
+  updatedAt  DateTime? @db.Timestamp(6)
+}

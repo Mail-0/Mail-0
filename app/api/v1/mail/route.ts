@@ -1,7 +1,5 @@
 import { createDriver } from "../../driver";
 import { NextRequest } from "next/server";
-import { connection } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 
@@ -13,10 +11,13 @@ export const GET = async ({ headers, nextUrl }: NextRequest) => {
   if (!session.connectionId) return new Response("Unauthorized", { status: 401 });
 
   // Updated to use googleConnection table
-  const [_connection] = await db
-    .select()
-    .from(connection)
-    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
+  const _connection = await db.connection.findFirst({
+    where: {
+      userId: session.user.id,
+      id: session.connectionId,
+    },
+    take: 1,
+  });
 
   if (!_connection?.accessToken || !_connection.refreshToken)
     return new Response("Unauthorized, reconnect", { status: 401 });

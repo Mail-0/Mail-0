@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { connection, user as _user, account } from "@/db/schema";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { prismaAdapter } from "better-auth/adapters/prisma";
 import { betterAuth, BetterAuthOptions } from "better-auth";
 import { customSession } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { env } from "./env";
 import { db } from "@/db";
@@ -15,8 +13,8 @@ const resend = env.RESEND_API_KEY
   : { emails: { send: async (...args: any[]) => console.log(args) } };
 
 const options = {
-  database: drizzleAdapter(db, {
-    provider: "pg",
+  database: prismaAdapter(db, {
+    provider: "postgresql",
   }),
   advanced: {
     ipAddress: {
@@ -78,44 +76,48 @@ const options = {
   },
   plugins: [
     customSession(async ({ user, session }) => {
-      const [foundUser] = await db
-        .select({
-          activeConnectionId: _user.defaultConnectionId,
-        })
-        .from(_user)
-        .where(eq(_user.id, user.id))
-        .limit(1);
-      if (!foundUser.activeConnectionId) {
-        const [defaultConnection] = await db
-          .select()
-          .from(connection)
-          .where(eq(connection.userId, user.id))
-          .limit(1);
+      const foundUser = await db.user.findFirst({
+        where: {
+          id: user.id,
+        },
+        select: { defaultConnectionId: true },
+        take: 1,
+      });
+      if (!foundUser?.defaultConnectionId) {
+        const defaultConnection = await db.connection.findFirst({
+          where: {
+            userId: user.id,
+          },
+          take: 1,
+        });
         if (!defaultConnection) {
           // find the user account the user has
-          const [userAccount] = await db
-            .select()
-            .from(account)
-            .where(eq(account.userId, user.id))
-            .limit(1);
+          const userAccount = await db.account.findFirst({
+            where: {
+              userId: user.id,
+            },
+            take: 1,
+          });
           if (userAccount) {
             // create a new connection
-            const [newConnection] = await db.insert(connection).values({
-              id: crypto.randomUUID(),
-              userId: user.id,
-              email: user.email,
-              name: user.name,
-              picture: user.image,
-              accessToken: userAccount.accessToken,
-              refreshToken: userAccount.refreshToken,
-              scope: userAccount.scope,
-              providerId: userAccount.providerId,
-              expiresAt: new Date(
-                Date.now() + (userAccount.accessTokenExpiresAt?.getTime() || 3600000),
-              ),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            } as any);
+            const newConnection = await db.connection.create({
+              data: {
+                id: crypto.randomUUID(),
+                userId: user.id,
+                email: user.email,
+                name: user.name,
+                picture: user.image,
+                accessToken: userAccount.accessToken ?? "",
+                refreshToken: userAccount.refreshToken,
+                scope: userAccount.scope ?? "",
+                providerId: userAccount.providerId,
+                expiresAt: new Date(
+                  Date.now() + (userAccount.accessTokenExpiresAt?.getTime() || 3600000),
+                ),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              },
+            });
             // this type error is pissing me tf off
             if (newConnection) {
               console.log("Created new connection for user", newConnection);
@@ -129,7 +131,7 @@ const options = {
         };
       }
       return {
-        connectionId: foundUser.activeConnectionId,
+        connectionId: foundUser.defaultConnectionId,
         user,
         session,
       };

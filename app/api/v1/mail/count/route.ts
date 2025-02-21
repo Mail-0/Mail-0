@@ -1,14 +1,17 @@
 import { createDriver } from "../../../driver";
 import { NextRequest } from "next/server";
-import { account } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
 import { db } from "@/db";
 
 export const GET = async ({ headers }: NextRequest) => {
   const session = await auth.api.getSession({ headers });
   if (!session) return new Response("Unauthorized", { status: 401 });
-  const [foundAccount] = await db.select().from(account).where(eq(account.userId, session.user.id));
+  const foundAccount = await db.account.findFirst({
+    where: {
+      userId: session.user.id,
+    },
+    take: 1,
+  });
   if (!foundAccount?.accessToken || !foundAccount.refreshToken)
     return new Response("Unauthorized, reconnect", { status: 401 });
   const driver = await createDriver(foundAccount.providerId, {
