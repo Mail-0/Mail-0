@@ -13,7 +13,18 @@ export const siteConfig: Metadata = {
   },
   applicationName: "0 Email",
   creator: "Open Source Developers",
-
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [
+      {
+        url: `${BASE_URL}/og/home`,
+        width: 1200,
+        height: 630,
+        alt: TITLE,
+      },
+    ],
+  },
   category: "AU",
   alternates: {
     canonical: BASE_URL,
