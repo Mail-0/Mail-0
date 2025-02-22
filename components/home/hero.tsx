@@ -84,7 +84,7 @@ export default function Hero() {
       </Balancer>
 
       <Card className="mt-3 w-full border-none bg-transparent shadow-none">
-        <CardContent className="flex items-center justify-center px-0">
+        <CardContent className="flex items-center justify-center px-4">
           {process.env.NODE_ENV === "development" ? (
             <Button variant="default" className="group h-9" asChild>
               <Link href="/login">
