@@ -14,7 +14,10 @@ import {
 } from "./sidebar";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { BASE_URL } from "@/lib/constants";
+import { mailCount } from "@/actions/mail";
 import { cn } from "@/lib/utils";
+import { Badge } from "./badge";
+import useSWR from "swr";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -181,6 +184,7 @@ export function NavMain({ items }: NavMainProps) {
 
 function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
+  const { data: stats } = useSWR<{ folder: string; count: number }[]>("mail-count", mailCount);
 
   if (item.disabled) {
     return (
@@ -209,6 +213,11 @@ function NavItem(item: NavItemProps & { href: string }) {
           >
             {item.icon && <item.icon ref={iconRef} className="relative mr-3 h-3 w-3.5" />}
             <p className="mt-0.5 text-[13px]">{item.title}</p>
+            {stats && stats.find((stat) => stat.folder === item.title.toLowerCase()) && (
+              <Badge className="ml-auto" variant="outline">
+                {stats.find((stat) => stat.folder === item.title.toLowerCase())?.count}
+              </Badge>
+            )}
           </SidebarMenuButton>
         </Link>
       </CollapsibleTrigger>

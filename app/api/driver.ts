@@ -23,6 +23,7 @@ interface MailManager {
   getUserInfo(tokens: IConfig["auth"]): Promise<any>;
   getScope(): string;
   markAsRead(id: string): Promise<void>;
+  getLabels(): Promise<any>;
 }
 
 interface IConfig {
@@ -151,6 +152,10 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
         throw error;
       }
     },
+    getLabels: async () => {
+      const res = await gmail.users.labels.list({ userId: "me" });
+      return res.data.labels;
+    },
     generateConnectionAuthUrl: (userId: string) => {
       return auth.generateAuthUrl({
         access_type: "offline",
@@ -166,14 +171,17 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
       return await Promise.all(
         folders.map(async (folder) => {
           const { folder: normalizedFolder, q: normalizedQ } = normalizeSearch(folder, "");
-          const labelIds = [];
+          const labelIds = ["UNREAD"];
           if (normalizedFolder) labelIds.push(normalizedFolder.toUpperCase());
           const res = await gmail.users.threads.list({
             userId: "me",
             q: normalizedQ ? normalizedQ : undefined,
             labelIds,
           });
-          return res.data.resultSizeEstimate;
+          return {
+            folder: normalizedFolder,
+            count: res.data.resultSizeEstimate,
+          };
         }),
       );
     },

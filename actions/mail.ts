@@ -136,3 +136,32 @@ export const mailCount = async () => {
 
   return await driver.count();
 };
+
+export const getLabels = async () => {
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+
+  if (!session || !session.connectionId) {
+    throw new Error("Unauthorized, reconnect");
+  }
+
+  // Updated to use googleConnection table
+  const [_connection] = await db
+    .select()
+    .from(connection)
+    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
+
+  if (!_connection?.accessToken || !_connection.refreshToken) {
+    throw new Error("Unauthorized, reconnect");
+  }
+
+  const driver = await createDriver(_connection.providerId, {
+    // Assuming "google" is the provider ID
+    auth: {
+      access_token: _connection.accessToken,
+      refresh_token: _connection.refreshToken,
+    },
+  });
+
+  return await driver.getLabels();
+};
