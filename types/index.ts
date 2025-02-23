@@ -57,6 +57,8 @@ export interface IConnection {
   email: string;
   name?: string;
   picture?: string;
+  providerId: string;
+  createdAt: string;
 }
 
 export interface InitialThread {

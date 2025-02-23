@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
         email: connection.email,
         name: connection.name,
         picture: connection.picture,
+        providerId: connection.providerId,
         createdAt: connection.createdAt,
       })
       .from(connection)

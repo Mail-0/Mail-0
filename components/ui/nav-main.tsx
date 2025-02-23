@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import * as React from "react";
 import Link from "next/link";
 
@@ -121,22 +121,35 @@ export function NavMain({ items }: NavMainProps) {
 
       return item.url;
     },
-    [pathname, searchParams, isValidInternalUrl],
+    [pathname, searchParams],
   );
 
+  const iconRefs = useRef<{ [key: string]: React.RefObject<IconRefType | null> }>({});
+
+  // Initialize refs for all items
+  useEffect(() => {
+    items.forEach((section) => {
+      section.items.forEach((item) => {
+        if (item.icon && !iconRefs.current[item.title]) {
+          iconRefs.current[item.title] = React.createRef<IconRefType>();
+        }
+      });
+    });
+  }, [items]);
+
+  // Checks if the given URL matches the current URL path and required search parameters.
   const isUrlActive = useCallback(
     (url: string) => {
-      const urlObj = new URL(
-        url,
-        typeof window === "undefined" ? BASE_URL : window.location.origin,
-      );
+      const [urlPath, urlQuery] = url.split("?");
       const cleanPath = pathname.replace(/\/$/, "");
-      const cleanUrl = urlObj.pathname.replace(/\/$/, "");
+      const cleanUrl = urlPath.replace(/\/$/, "");
 
       if (cleanPath !== cleanUrl) return false;
 
-      const urlParams = new URLSearchParams(urlObj.search);
+      const urlParams = new URLSearchParams(urlQuery || "");
       const currentParams = new URLSearchParams(searchParams);
+
+      if ([...urlParams.keys()].length !== [...currentParams.keys()].length) return false;
 
       for (const [key, value] of urlParams) {
         if (currentParams.get(key) !== value) return false;

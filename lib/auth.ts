@@ -40,6 +40,11 @@ const options = {
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET,
     },
+    microsoft: {
+      clientId: env.MICROSOFT_CLIENT_ID,
+      clientSecret: env.MICROSOFT_CLIENT_SECRET,
+      scope: ["User.Read", "Mail.ReadWrite", "Mail.Send", "offline_access"],
+    },
   },
   emailAndPassword: {
     enabled: false,

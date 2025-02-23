@@ -1,36 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { ParsedMessage, InitialThread } from "@/types";
+import { ParsedMessage, MailManager, IConfig, UserInfo } from "../types";
 import { type gmail_v1, google } from "googleapis";
 import { env } from "@/lib/env";
 import * as he from "he";
-
-interface MailManager {
-  get(id: string): Promise<ParsedMessage[] | undefined>;
-  create(data: any): Promise<any>;
-  delete(id: string): Promise<any>;
-  list<T>(
-    folder: string,
-    query?: string,
-    maxResults?: number,
-    labelIds?: string[],
-  ): Promise<(T & { threads: InitialThread[] }) | undefined>;
-  count(): Promise<any>;
-  generateConnectionAuthUrl(userId: string): string;
-  getTokens(
-    code: string,
-  ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
-  getUserInfo(tokens: IConfig["auth"]): Promise<any>;
-  getScope(): string;
-  markAsRead(id: string): Promise<void>;
-}
-
-interface IConfig {
-  auth?: {
-    access_token: string;
-    refresh_token: string;
-  };
-}
 
 function fromBinary(str: string) {
   return decodeURIComponent(
@@ -86,7 +58,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
     payload,
   }: gmail_v1.Schema$Message): Omit<
     ParsedMessage,
-    "body" | "processedHtml" | "blobUrl" | "totalReplies"
+    "body" | "processedHtml" | "blobUrl" | "totalReplies" | "decodedBody"
   > => {
     const receivedOn =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "date")?.value || "Failed";
@@ -124,6 +96,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
     }
     return { folder, q };
   };
+
   const gmail = google.gmail({ version: "v1", auth });
   return {
     markAsRead: async (id: string) => {
@@ -136,11 +109,26 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
       });
     },
     getScope,
-    getUserInfo: (tokens: { access_token: string; refresh_token: string }) => {
+    getUserInfo: async (tokens: { access_token: string; refresh_token: string }) => {
       auth.setCredentials({ ...tokens, scope: getScope() });
-      return google
-        .people({ version: "v1", auth })
-        .people.get({ resourceName: "people/me", personFields: "names,photos,emailAddresses" });
+      try {
+        const res = await google
+          .people({ version: "v1", auth })
+          .people.get({ resourceName: "people/me", personFields: "names,photos,emailAddresses" });
+
+        const gmailPayload = res.data;
+
+        const userInfo: UserInfo = {
+          email: gmailPayload.emailAddresses![0].value!,
+          name: gmailPayload.names?.[0].displayName ?? "",
+          picture: gmailPayload.photos?.[0].url ?? null,
+        };
+
+        return userInfo;
+      } catch (error: any) {
+        console.error("Error fetching user info from Google:", error);
+        throw new Error(`Failed to get user info from Google: ${error.message}`);
+      }
     },
     getTokens: async <T>(code: string) => {
       try {
@@ -246,6 +234,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
           // blobUrl: `data:text/html;charset=utf-8,${encodeURIComponent(decodedBody)}`,
           blobUrl: "",
           decodedBody,
+          totalReplies: 1,
         };
 
         // Log the result for debugging
@@ -271,20 +260,4 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
   };
 };
 
-const SupportedProviders = {
-  google: googleDriver,
-};
-
-export const createDriver = async (
-  provider: keyof typeof SupportedProviders | string,
-  config: IConfig,
-): Promise<MailManager> => {
-  const factory = SupportedProviders[provider as keyof typeof SupportedProviders];
-  if (!factory) throw new Error("Provider not supported");
-  switch (provider) {
-    case "google":
-      return factory(config);
-    default:
-      throw new Error("Provider not supported");
-  }
-};
+export default googleDriver;

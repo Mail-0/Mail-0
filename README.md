@@ -6,28 +6,30 @@ An Open-Source Gmail Alternative for the Future of Email
 
 ## Table of Contents <!-- omit from toc -->
 
-- [What is Mail0.io?](#what-is-mail0io)
-- [Why Mail0.io?](#why-mail0io)
-- [Our Mission](#our-mission)
-- [Documentation](#documentation)
-- [Roadmap 🛤️](#roadmap-️)
-  - [1. Core Email Connectivity](#1-core-email-connectivity)
-  - [2. Email Usage Improvements](#2-email-usage-improvements)
-  - [3. Infrastructure](#3-infrastructure)
-- [Development Priorities](#development-priorities)
-- [Join the Movement 🚀](#join-the-movement-)
-  - [Stay Tuned](#stay-tuned)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Environment Variables](#environment-variables)
-  - [Running Locally](#running-locally)
-- [Contribute](#contribute)
-- [Issues](#issues)
-  - [Create a new issue](#create-a-new-issue)
-  - [Solve an issue](#solve-an-issue)
-- [Pull Request](#pull-request)
-- [License](#license)
+- [Mail0.io](#mail0io)
+  - [What is Mail0.io?](#what-is-mail0io)
+  - [Why Mail0.io?](#why-mail0io)
+  - [Our Mission](#our-mission)
+  - [Documentation](#documentation)
+  - [Roadmap 🛤️](#roadmap-️)
+    - [1. Core Email Connectivity](#1-core-email-connectivity)
+    - [2. Email Usage Improvements](#2-email-usage-improvements)
+    - [3. Infrastructure](#3-infrastructure)
+  - [Development Priorities](#development-priorities)
+  - [Join the Movement 🚀](#join-the-movement-)
+    - [Stay Tuned](#stay-tuned)
+  - [Tech Stack](#tech-stack)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Environment Variables](#environment-variables)
+    - [Update the PostgreSQL database accordingly](#update-the-postgresql-database-accordingly)
+    - [Running Locally](#running-locally)
+  - [Contribute](#contribute)
+  - [Issues](#issues)
+    - [Create a new issue](#create-a-new-issue)
+    - [Solve an issue](#solve-an-issue)
+  - [Pull Request](#pull-request)
+  - [License](#license)
 
 ## What is Mail0.io?
 
@@ -204,7 +206,38 @@ Before running the application, you'll need to set up several services and envir
 > [!WARNING]
 > The `GOOGLE_REDIRECT_URI` must match **exactly** what you configure in the Google Cloud Console, including the protocol (http/https), domain, and path - these are provided above.
 
-4. **GitHub OAuth Setup**
+4. **Microsoft OAuth Setup**
+
+- Go to the [Microsoft Entra Admin Center](https://entra.microsoft.com/) > **Add** > **App registration**.
+- Set **Supported account types** to **Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant) and personal Microsoft accounts (e.g. Skype, Xbox)**
+- Set platform to **Web**
+- Add authorized redirect URI:
+  - Development:
+    - `http://localhost:3000/api/auth/callback/microsoft`
+  - Production:
+    - `https://your-production-url/api/auth/callback/microsoft`
+- After registering, go to **Authentication** and add additional redirect URI:
+  - Development:
+    - `https://localhost:3000/api/v1/mail/auth/microsoft/callback`
+  - Production:
+    - `https://your-production-url/api/v1/mail/auth/microsoft/callback`
+- In **Certificates & secrets**, create a **New client secret** and be sure to copy it.
+- In **API permissions**, click **Add permission** > **Microsoft Graph** > **Delegated permissions** and add the following:
+  - `Mail.ReadWrite`
+  - `Mail.Send`
+  - `offline_access`
+- Add to `.env`:
+
+  ```env
+  MICROSOFT_CLIENT_ID=your_client_id
+  MICROSOFT_CLIENT_SECRET=your_client_secret
+  MICROSOFT_REDIRECT_URI=http://localhost:3000/api/v1/mail/auth/microsoft/callback
+  ```
+
+> [!WARNING]
+> The `MICROSOFT_REDIRECT_URI` must match **exactly** what you configure in the Microsoft Entra Admin Center, including the protocol (http/https), domain, and path - these are provided above.
+
+5. **Github OAuth Setup**
 
    - Go to [GitHub Developer Setting](https://github.com/settings/developers)
    - Create a new OAuth App
@@ -234,6 +267,11 @@ BETTER_AUTH_SECRET=     # Required: Secret key for authentication
 GOOGLE_CLIENT_ID=       # Required for Gmail integration
 GOOGLE_CLIENT_SECRET=   # Required for Gmail integration
 GOOGLE_REDIRECT_URI=    # Required for Gmail integration
+
+# Microsoft OAuth (Optional)
+MICROSOFT_CLIENT_ID=    # Required for Microsoft integration
+MICROSOFT_CLIENT_SECRET= # Required for Microsoft integration
+MICROSOFT_REDIRECT_URI= # Required for Microsoft integration
 
 # Database
 DATABASE_URL=          # Required: PostgreSQL connection string

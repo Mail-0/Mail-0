@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDriver } from "@/app/api/driver";
-import { connection } from "@/db/schema";
+import { connection, user } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { db } from "@/db";
 
@@ -35,21 +36,24 @@ export async function GET(
       refresh_token: tokens.refresh_token,
     });
 
-    if (!userInfo.data?.emailAddresses?.[0]?.value) {
+    if (!userInfo.email) {
       console.error("Missing email in user info:", userInfo);
       return new NextResponse(JSON.stringify({ error: 'Missing "email" in user info' }), {
         status: 400,
       });
     }
 
+    const userId = state;
+    const connectionId = crypto.randomUUID();
+
     // Store the connection in the database
     await db.insert(connection).values({
       providerId,
-      id: crypto.randomUUID(),
-      userId: state,
-      email: userInfo.data.emailAddresses[0].value,
-      name: userInfo.data.names?.[0]?.displayName || "Unknown",
-      picture: userInfo.data.photos?.[0]?.url || "",
+      id: connectionId,
+      userId,
+      email: userInfo.email,
+      name: userInfo.name,
+      picture: userInfo.picture || "",
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       scope: driver.getScope(),
@@ -57,6 +61,13 @@ export async function GET(
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    await db
+      .update(user)
+      .set({
+        defaultConnectionId: connectionId,
+      })
+      .where(eq(user.id, userId));
 
     return NextResponse.redirect(new URL("/connect-emails?success=true", request.url));
   } catch (error) {

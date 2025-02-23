@@ -73,7 +73,6 @@ export function AccountSwitcher({ accounts }: AccountSwitcherProps) {
         <DropdownMenuLabel>Accounts</DropdownMenuLabel>
         {accounts.map((account, index) => (
           <DropdownMenuItem key={account.name} onSelect={() => setSelectedAccount(account)}>
-            <account.logo className="mr-2 size-4" />
             <span>{account.name}</span>
             <div className="ml-auto flex items-center gap-2">
               {account === selectedAccount && <Check className="size-4" />}
