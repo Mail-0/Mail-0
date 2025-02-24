@@ -1,13 +1,13 @@
 "use client";
 
-import { Form, FormControl, FormField, FormItem } from "../ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent } from "../ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ArrowRightIcon } from "lucide-react";
 import Balancer from "react-wrap-balancer";
 import { useForm } from "react-hook-form";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";

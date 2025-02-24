@@ -49,7 +49,6 @@ export interface ParsedMessage {
   references?: string;
   inReplyTo?: string;
   messageId?: string;
-  threadId?: string;
 }
 
 export interface IConnection {

@@ -1,6 +1,6 @@
 import { Archive, Copy, Maximize2, Minimize2, X, Reply, MoreVertical } from "lucide-react";
-import { Skeleton } from "../ui/skeleton";
-import { Button } from "../ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }) => {

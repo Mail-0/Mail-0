@@ -11,19 +11,19 @@ import {
   Send,
 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { compressText, decompressText, truncateFileName } from "@/lib/utils";
-import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useOpenComposeModal } from "@/hooks/use-open-compose-modal";
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { Separator } from "@/components/ui/separator";
 import { DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { sendEmail } from "@/actions/send";
 import { useQueryState } from "nuqs";
-import { Badge } from "../ui/badge";
 import Image from "next/image";
 import { toast } from "sonner";
 import * as React from "react";

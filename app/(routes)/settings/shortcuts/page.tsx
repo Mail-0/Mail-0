@@ -40,7 +40,7 @@ function Shortcut({ children, keys }: { children: ReactNode; keys: string[] }) {
         {keys.map((key) => (
           <kbd
             key={key}
-            className="h-6 rounded-[6px] border border-muted-foreground/10 bg-accent px-1.5 font-mono text-xs leading-6"
+            className="h-6 rounded-[6px] border border-muted-foreground/10 bg-accent px-1.5 text-xs leading-6"
           >
             {key}
           </kbd>

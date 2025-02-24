@@ -1,12 +1,12 @@
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { BellOff, Lock } from "lucide-react";
-import { Separator } from "../ui/separator";
 import { useState, useEffect } from "react";
 import { MailIframe } from "./mail-iframe";
 import { ParsedMessage } from "@/types";
-import { Button } from "../ui/button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
