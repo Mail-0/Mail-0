@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client";
 
 import {
@@ -57,6 +55,7 @@ export default function SignUp() {
       });
       toast.success("Please check your email for verification.");
       router.push("/signup/verify");
+      /* eslint-disable @typescript-eslint/no-explicit-any */
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || "Something went wrong. Please try again.");

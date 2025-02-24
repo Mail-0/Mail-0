@@ -2,11 +2,11 @@
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { AlignVerticalSpaceAround, Trash2 } from "lucide-react";
+import { SidebarToggle } from "@/components/ui/sidebar-toggle";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { SearchIcon } from "../icons/animated/search";
-import { SidebarToggle } from "../ui/sidebar-toggle";
 import { useDrafts } from "./draftHooks/useDrafts";
 import { Button } from "@/components/ui/button";
 import { DraftType } from "@/store/draftStates";
