@@ -20,6 +20,7 @@ import { MailDisplaySkeleton, MailHeaderSkeleton } from "./mail-skeleton";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useThread } from "@/hooks/use-threads";
+import ThreadSubject from "./thread-subject";
 import ReplyCompose from "./reply-composer";
 import MailDisplay from "./mail-display";
 import { useMail } from "./use-mail";
@@ -106,110 +107,113 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
           isFullscreen ? "fixed inset-0 z-50" : "",
         )}
       >
-        <div className="flex flex-shrink-0 items-center border-b p-2">
-          <div className="flex flex-1 items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="md:h-fit md:px-2"
-                  disabled={!emailData}
-                  onClick={handleClose}
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Close</TooltipContent>
-            </Tooltip>
+        <div className="border-b">
+          <div className="flex flex-shrink-0 items-center p-2">
+            <div className="flex flex-1 items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="md:h-fit md:px-2"
+                    disabled={!emailData}
+                    onClick={handleClose}
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Close</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Close</TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="md:h-fit md:px-2"
+                    disabled={!emailData}
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                    <span className="sr-only">
+                      {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="md:h-fit md:px-2"
+                    disabled={!emailData}
+                    onClick={handleCopy}
+                  >
+                    {copySuccess ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        <span className="sr-only">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        <span className="sr-only">Copy email data</span>
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{copySuccess ? "Copied!" : "Copy email data"}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                    <Archive className="h-4 w-4" />
+                    <span className="sr-only">Archive</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Archive</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                    <Reply className="h-4 w-4" />
+                    <span className="sr-only">Reply</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reply</TooltipContent>
+              </Tooltip>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                    <MoreVertical className="h-4 w-4" />
+                    <span className="sr-only">More</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>
+                    <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <ReplyAll className="mr-2 h-4 w-4" /> Reply all
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Forward className="mr-2 h-4 w-4" /> Forward
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>Mark as unread</DropdownMenuItem>
+                  <DropdownMenuItem>Add label</DropdownMenuItem>
+                  <DropdownMenuItem>Mute thread</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="md:h-fit md:px-2"
-                  disabled={!emailData}
-                  onClick={() => setIsFullscreen(!isFullscreen)}
-                >
-                  {isFullscreen ? (
-                    <Minimize2 className="h-4 w-4" />
-                  ) : (
-                    <Maximize2 className="h-4 w-4" />
-                  )}
-                  <span className="sr-only">
-                    {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-                  </span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="md:h-fit md:px-2"
-                  disabled={!emailData}
-                  onClick={handleCopy}
-                >
-                  {copySuccess ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      <span className="sr-only">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      <span className="sr-only">Copy email data</span>
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{copySuccess ? "Copied!" : "Copy email data"}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <Archive className="h-4 w-4" />
-                  <span className="sr-only">Archive</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Archive</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <Reply className="h-4 w-4" />
-                  <span className="sr-only">Reply</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Reply</TooltipContent>
-            </Tooltip>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">More</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <ReplyAll className="mr-2 h-4 w-4" /> Reply all
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Forward className="mr-2 h-4 w-4" /> Forward
-                </DropdownMenuItem>
-                <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-                <DropdownMenuItem>Add label</DropdownMenuItem>
-                <DropdownMenuItem>Mute thread</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <ThreadSubject subject={emailData[0]?.subject} />
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ScrollArea className="flex-1" type="scroll">
