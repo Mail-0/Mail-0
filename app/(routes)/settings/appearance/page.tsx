@@ -5,33 +5,45 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ModeToggle } from "@/components/theme/theme-switcher";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { toast } from "sonner";
 import * as z from "zod";
 
 // TODO: More customization options
 const formSchema = z.object({
-  inboxType: z.enum(["default", "important", "unread"]),
+  inboxType: z.enum(["all", "important", "unread"]).optional(),
+  maxResults: z.number().min(10).max(200).optional(),
 });
 
 export default function AppearancePage() {
   const [isSaving, setIsSaving] = useState(false);
+  const [settings, setSettings] = useSettings();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      inboxType: "default",
+      inboxType: settings.inboxLayout || "all",
+      maxResults: settings.maxResults || 10,
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("values", values);
     setIsSaving(true);
-    setTimeout(() => {
-      console.log(values);
-      setIsSaving(false);
-    }, 1000);
+    setSettings((prev) => ({
+      ...prev,
+      inboxLayout: values.inboxType || prev.inboxLayout,
+      maxResults: values.maxResults || prev.maxResults,
+    }));
+    setIsSaving(false);
+    toast.success("Settings saved", {
+      className: "bg-foreground text-background",
+    });
   }
 
   return (
@@ -68,8 +80,8 @@ export default function AppearancePage() {
                         className="grid gap-4 sm:grid-cols-3"
                       >
                         <div className="flex items-center space-x-2 rounded-lg border p-4">
-                          <RadioGroupItem value="default" id="default" />
-                          <Label htmlFor="default">Default</Label>
+                          <RadioGroupItem value="all" id="all" />
+                          <Label htmlFor="all">Default</Label>
                         </div>
                         <div className="flex items-center space-x-2 rounded-lg border p-4">
                           <RadioGroupItem value="important" id="important" />
@@ -80,6 +92,54 @@ export default function AppearancePage() {
                           <Label htmlFor="unread">Unread First</Label>
                         </div>
                       </RadioGroup>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="maxResults"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>Max conversations per page</FormLabel>
+                    <FormControl>
+                      <div className="space-y-4">
+                        <RadioGroup
+                          onValueChange={(value) => field.onChange(Number(value) || 10)}
+                          value={field.value?.toString()}
+                          className="grid grid-cols-2 gap-2 sm:grid-cols-5"
+                        >
+                          {[10, 25, 50, 100, 200].map((value) => (
+                            <Label key={value} htmlFor={`max-${value}`} className="cursor-pointer">
+                              <div className="flex items-center space-x-2 rounded-lg border p-4 hover:bg-accent">
+                                <RadioGroupItem value={value.toString()} id={`max-${value}`} />
+                                <span className="text-sm font-medium">{value}</span>
+                              </div>
+                            </Label>
+                          ))}
+                        </RadioGroup>
+                        <div className="flex items-center space-x-2 rounded-lg border p-4">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-4">
+                              <Slider
+                                className="flex-1"
+                                min={10}
+                                max={200}
+                                step={5}
+                                value={[Number(field.value) || 10]}
+                                onValueChange={(value) => field.onChange(value[0])}
+                              />
+                              <div className="w-12 rounded-md border px-2 py-1 text-center text-sm">
+                                {field.value}
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Fine-tune the number of conversations shown per page
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}
