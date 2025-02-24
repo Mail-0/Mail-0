@@ -9,20 +9,16 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import React, { useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { $fetch } from "@/lib/auth-client";
-import { BASE_URL } from "@/lib/constants";
+import { mailCount } from "@/actions/mail";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { Button } from "./button";
 import Image from "next/image";
 import useSWR from "swr";
 
-const fetchStats = async () => {
-  return await $fetch("/api/v1/mail/count?", { baseURL: BASE_URL }).then((e) => e.data as number[]);
-};
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: stats } = useSWR<number[]>("/api/v1/mail/count", fetchStats);
+  const { data: stats } = useSWR<number[]>("mail-count", mailCount);
+
   const pathname = usePathname();
 
   const { currentSection, navItems } = useMemo(() => {
@@ -82,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarContent>
       </div>
 
-      <div className="mb-4 mt-auto pl-1.5">
+      <div className="mb-4 ml-1 mt-auto pl-1.5">
         <Image
           src="/black-icon.svg"
           alt="Mail0 Logo"
@@ -111,7 +107,7 @@ function ComposeButton() {
   return (
     <Button
       onClick={open}
-      className="relative isolate mt-1 h-8 w-[calc(100%)] overflow-hidden whitespace-nowrap bg-secondary text-primary shadow-[0_1px_3px_theme(colors.black/0.05)] ring-1 ring-black/5 before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-md before:bg-gradient-to-b before:from-black/5 before:opacity-50 before:transition-opacity hover:bg-secondary/90 hover:before:opacity-100 dark:shadow-[0_1px_theme(colors.white/0.07)_inset] dark:ring-white/5 dark:before:from-white/20"
+      className="relative isolate mt-1 h-8 w-[calc(100%)] overflow-hidden whitespace-nowrap bg-secondary bg-subtleWhite text-primary shadow-inner hover:bg-subtleWhite dark:bg-subtleBlack dark:hover:bg-subtleBlack"
       onMouseEnter={() => () => iconRef.current?.startAnimation?.()}
       onMouseLeave={() => () => iconRef.current?.stopAnimation?.()}
     >

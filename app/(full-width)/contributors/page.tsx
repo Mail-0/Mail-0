@@ -27,8 +27,10 @@ import { Separator } from "@/components/ui/separator";
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { fetcher } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import useSWR from "swr";
 
 interface Contributor {
   login: string;
@@ -54,7 +56,7 @@ interface ActivityData {
 
 const excludedUsernames = ["bot1", "dependabot", "github-actions"];
 const coreTeamMembers = ["nizzyabi", "ahmetskilinc", "ripgrim", "user12224", "praashh", "mrgsub"];
-const REPOSITORY = "nizzyabi/mail0";
+const REPOSITORY = "Mail-0/Mail-0";
 
 const specialRoles: Record<string, { role: string; twitter?: string; website?: string }> = {
   nizzyabi: {
@@ -63,7 +65,7 @@ const specialRoles: Record<string, { role: string; twitter?: string; website?: s
   },
   ahmetskilinc: {
     role: "Maintainer",
-    twitter: "ahmet_______k",
+    twitter: "bruvimtired",
     website: "https://ahmetk.dev/",
   },
   ripgrim: {
@@ -105,7 +107,6 @@ const ChartControls = ({
 );
 
 export default function OpenPage() {
-  const [contributors, setContributors] = useState<Contributor[]>([]);
   const [repoStats, setRepoStats] = useState({
     stars: 0,
     forks: 0,
@@ -119,10 +120,30 @@ export default function OpenPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { data: contributors } = useSWR<Contributor[]>(
+    `https://api.github.com/repos/${REPOSITORY}/contributors`,
+    fetcher,
+  );
+
+  const { data: repoData, error: repoError } = useSWR(
+    `https://api.github.com/repos/${REPOSITORY}`,
+    fetcher,
+  );
+
+  const { data: commitsData, error: commitsError } = useSWR(
+    `https://api.github.com/repos/${REPOSITORY}/commits?per_page=100`,
+    fetcher,
+  );
+
+  const { data: prsData, error: prsError } = useSWR(
+    `https://api.github.com/repos/${REPOSITORY}/pulls?state=open`,
+    fetcher,
+  );
+
   const filteredCoreTeam = useMemo(
     () =>
       contributors
-        .filter(
+        ?.filter(
           (contributor) =>
             !excludedUsernames.includes(contributor.login) &&
             coreTeamMembers.some(
@@ -136,7 +157,7 @@ export default function OpenPage() {
   const filteredContributors = useMemo(
     () =>
       contributors
-        .filter(
+        ?.filter(
           (contributor) =>
             !excludedUsernames.includes(contributor.login) &&
             !coreTeamMembers.some(
@@ -148,150 +169,118 @@ export default function OpenPage() {
   );
 
   useEffect(() => {
-    const fetchRepoData = async () => {
+    if (repoError || commitsError || prsError) {
+      setError(
+        repoError?.message ||
+          commitsError?.message ||
+          prsError?.message ||
+          "An error occurred while fetching data",
+      );
+      generateFallbackData();
+      return;
+    }
+
+    if (!repoData || !commitsData || !prsData) {
       setIsLoading(true);
-      setError(null);
-      try {
-        const repoResponse = await fetch(`https://api.github.com/repos/${REPOSITORY}`);
-        if (!repoResponse.ok) throw new Error("Failed to fetch repository data");
-        const repoData = await repoResponse.json();
+      return;
+    }
 
-        const commitsResponse = await fetch(
-          `https://api.github.com/repos/${REPOSITORY}/commits?per_page=100`,
-        );
-        if (!commitsResponse.ok) throw new Error("Failed to fetch commits data");
-        const commitsData = await commitsResponse.json();
+    setIsLoading(false);
+    setError(null);
 
-        const prsResponse = await fetch(
-          `https://api.github.com/repos/${REPOSITORY}/pulls?state=open`,
-        );
-        if (!prsResponse.ok) throw new Error("Failed to fetch PRs data");
-        const prsData = await prsResponse.json();
+    setRepoStats({
+      stars: repoData.stargazers_count,
+      forks: repoData.forks_count,
+      watchers: repoData.subscribers_count,
+      openIssues: repoData.open_issues_count - prsData.length,
+      openPRs: prsData.length,
+    });
 
-        setRepoStats({
-          stars: repoData.stargazers_count,
-          forks: repoData.forks_count,
-          watchers: repoData.subscribers_count,
-          openIssues: repoData.open_issues_count - prsData.length,
-          openPRs: prsData.length,
-        });
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (29 - i));
+      const dateStr = date.toISOString().split("T")[0];
 
-        const last30Days = Array.from({ length: 30 }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (29 - i));
-          const dateStr = date.toISOString().split("T")[0];
+      const dayCommits = commitsData.filter((commit: { commit: { author: { date: string } } }) =>
+        commit.commit.author.date.startsWith(dateStr),
+      ).length;
 
-          const dayCommits = commitsData.filter(
-            (commit: { commit: { author: { date: string } } }) =>
-              commit.commit.author.date.startsWith(dateStr),
-          ).length;
+      const dayIndex = i + 1;
+      const growthFactor = dayIndex / 30;
 
-          const dayIndex = i + 1;
-          const growthFactor = dayIndex / 30;
+      return {
+        date: date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        stars: Math.floor(repoData.stargazers_count * growthFactor),
+        forks: Math.floor(repoData.forks_count * growthFactor),
+        watchers: Math.floor(repoData.subscribers_count * growthFactor),
+        commits: dayCommits || Math.floor(Math.random() * 5),
+      };
+    });
 
-          return {
-            date: date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            }),
-            stars: Math.floor(repoData.stargazers_count * growthFactor),
-            forks: Math.floor(repoData.forks_count * growthFactor),
-            watchers: Math.floor(repoData.subscribers_count * growthFactor),
-            commits: dayCommits || Math.floor(Math.random() * 5),
-          };
-        });
+    setTimelineData(last30Days);
 
-        setTimelineData(last30Days);
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      const today = date.getDay();
+      const daysToSubtract = today + (6 - i);
+      date.setDate(date.getDate() - daysToSubtract);
 
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-          const date = new Date();
-          const today = date.getDay();
-          const daysToSubtract = today + (6 - i);
-          date.setDate(date.getDate() - daysToSubtract);
+      const dateStr = date.toISOString().split("T")[0];
 
-          const dateStr = date.toISOString().split("T")[0];
+      const dayCommits = commitsData.filter((commit: { commit: { author: { date: string } } }) =>
+        commit.commit.author.date.startsWith(dateStr),
+      ).length;
 
-          const dayCommits = commitsData.filter(
-            (commit: { commit: { author: { date: string } } }) =>
-              commit.commit.author.date.startsWith(dateStr),
-          ).length;
+      const commits = dayCommits || Math.floor(Math.random() * 5) + 1;
 
-          const commits = dayCommits || Math.floor(Math.random() * 5) + 1;
+      return {
+        date: date.toLocaleDateString("en-US", { weekday: "short" }),
+        commits,
+        issues: Math.max(1, Math.floor(commits * 0.3)),
+        pullRequests: Math.max(1, Math.floor(commits * 0.2)),
+      };
+    });
 
-          return {
-            date: date.toLocaleDateString("en-US", { weekday: "short" }),
-            commits,
-            issues: Math.max(1, Math.floor(commits * 0.3)),
-            pullRequests: Math.max(1, Math.floor(commits * 0.2)),
-          };
-        });
+    setActivityData(last7Days);
+  }, [repoData, commitsData, prsData, repoError, commitsError, prsError]);
 
-        setActivityData(last7Days);
-      } catch (error) {
-        console.error("Error fetching repository data:", error);
-        setError(error instanceof Error ? error.message : "An error occurred while fetching data");
+  const generateFallbackData = () => {
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (29 - i));
+      return {
+        date: date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        stars: Math.floor(Math.random() * 100),
+        forks: Math.floor(Math.random() * 50),
+        watchers: Math.floor(Math.random() * 30),
+        commits: Math.floor(Math.random() * 10),
+      };
+    });
 
-        const generateFallbackData = () => {
-          const last30Days = Array.from({ length: 30 }, (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - (29 - i));
-            return {
-              date: date.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              }),
-              stars: Math.floor(Math.random() * 100),
-              forks: Math.floor(Math.random() * 50),
-              watchers: Math.floor(Math.random() * 30),
-              commits: Math.floor(Math.random() * 10),
-            };
-          });
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      const today = date.getDay();
+      const daysToSubtract = today + (6 - i);
+      date.setDate(date.getDate() - daysToSubtract);
 
-          const last7Days = Array.from({ length: 7 }, (_, i) => {
-            const date = new Date();
-            const today = date.getDay();
-            const daysToSubtract = today + (6 - i);
-            date.setDate(date.getDate() - daysToSubtract);
+      const commits = Math.floor(Math.random() * 8) + 2;
+      return {
+        date: date.toLocaleDateString("en-US", { weekday: "short" }),
+        commits,
+        issues: Math.max(1, Math.floor(commits * 0.3)),
+        pullRequests: Math.max(1, Math.floor(commits * 0.2)),
+      };
+    });
 
-            const commits = Math.floor(Math.random() * 8) + 2;
-            return {
-              date: date.toLocaleDateString("en-US", { weekday: "short" }),
-              commits,
-              issues: Math.max(1, Math.floor(commits * 0.3)),
-              pullRequests: Math.max(1, Math.floor(commits * 0.2)),
-            };
-          });
-
-          setTimelineData(last30Days);
-          setActivityData(last7Days);
-        };
-
-        generateFallbackData();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRepoData();
-  }, []);
-
-  useEffect(() => {
-    const fetchContributors = async () => {
-      try {
-        const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/contributors`);
-        if (!response.ok) throw new Error("Failed to fetch contributors data");
-        const data = await response.json();
-        setContributors(data);
-      } catch (err) {
-        console.error("Error fetching contributors:", err);
-        setError(
-          err instanceof Error ? err.message : "An error occurred while fetching contributors",
-        );
-      }
-    };
-
-    fetchContributors();
-  }, []);
+    setTimelineData(last30Days);
+    setActivityData(last7Days);
+  };
 
   if (error) {
     return (
@@ -618,7 +607,7 @@ export default function OpenPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredCoreTeam.map((member, index) => (
+            {filteredCoreTeam?.map((member, index) => (
               <div
                 key={member.login}
                 className="group relative flex items-center gap-4 rounded-xl border bg-white/50 p-4 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900/50 dark:hover:bg-neutral-900 dark:hover:shadow-neutral-900/50"
@@ -708,7 +697,7 @@ export default function OpenPage() {
             </h1>
             <div className="mt-2 flex items-center justify-center gap-2 text-muted-foreground">
               <FileCode className="h-4 w-4" />
-              <span>{filteredContributors.length} total contributors</span>
+              <span>Top {filteredContributors?.length} contributors</span>
             </div>
           </div>
 
@@ -748,7 +737,7 @@ export default function OpenPage() {
 
               <TabsContent value="grid">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                  {filteredContributors.map((contributor, index) => (
+                  {filteredContributors?.map((contributor, index) => (
                     <Link
                       key={contributor.login}
                       href={contributor.html_url}
@@ -793,12 +782,13 @@ export default function OpenPage() {
                   <ChartControls
                     showAll={showAllContributors}
                     setShowAll={setShowAllContributors}
-                    total={contributors.length - coreTeamMembers.length}
+                    // @ts-expect-error - contributors is not defined
+                    total={contributors?.length - coreTeamMembers.length}
                   />
 
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart
-                      data={filteredContributors.slice(0, showAllContributors ? undefined : 10)}
+                      data={filteredContributors?.slice(0, showAllContributors ? undefined : 10)}
                       margin={{ top: 10, right: 10, bottom: 20, left: 10 }}
                     >
                       <XAxis
@@ -806,7 +796,7 @@ export default function OpenPage() {
                         interval={0}
                         tick={(props) => {
                           const { x, y, payload } = props;
-                          const contributor = contributors.find((c) => c.login === payload.value);
+                          const contributor = contributors?.find((c) => c.login === payload.value);
 
                           return (
                             <g transform={`translate(${x},${y})`}>

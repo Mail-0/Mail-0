@@ -25,6 +25,7 @@ import { sendEmail } from "@/actions/send";
 import { useQueryState } from "nuqs";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
+import { toast } from "sonner";
 import * as React from "react";
 
 interface MailComposeProps {
@@ -115,6 +116,22 @@ export function MailCompose({ onClose, replyTo }: MailComposeProps) {
     () => attachments.length > MAX_VISIBLE_ATTACHMENTS,
     [attachments],
   );
+
+  const handleSendEmail = async () => {
+    try {
+      await sendEmail({
+        to: toInput,
+        subject: subject,
+        message: messageContent,
+        attachments: attachments,
+      });
+      onClose();
+      toast.success("Email sent successfully!");
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error("Failed to send email. Please try again.");
+    }
+  };
 
   const renderAttachments = React.useCallback(() => {
     if (attachments.length === 0) return null;
@@ -401,23 +418,7 @@ export function MailCompose({ onClose, replyTo }: MailComposeProps) {
                   <Input type="file" className="hidden" multiple onChange={handleAttachment} />
                 </label>
                 <div className="flex gap-2">
-                  <Button
-                    tabIndex={12}
-                    onClick={async () => {
-                      try {
-                        await sendEmail({
-                          to: toInput,
-                          subject: subject,
-                          message: messageContent,
-                          attachments: attachments,
-                        });
-                        onClose();
-                      } catch (error) {
-                        console.error("Error sending email:", error);
-                        // You might want to show an error toast here
-                      }
-                    }}
-                  >
+                  <Button tabIndex={12} onClick={handleSendEmail}>
                     Send
                     <Send className="ml-2 h-3 w-3" />
                   </Button>

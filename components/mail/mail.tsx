@@ -1,23 +1,9 @@
 "use client";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlignVerticalSpaceAround,
-  ArchiveX,
-  BellOff,
-  Check,
-  ListFilter,
-  SearchIcon,
-  X,
-} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { AlignVerticalSpaceAround, ArchiveX, BellOff, SearchIcon, X } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect, ReactNode } from "react";
 import { ThreadDisplay } from "@/components/mail/thread-display";
 import { useMediaQuery } from "../../hooks/use-media-query";
@@ -33,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { SearchBar } from "./search-bar";
+import { cn } from "@/lib/utils";
 
 interface MailProps {
   accounts: {
@@ -83,10 +70,13 @@ export function Mail({ folder }: MailProps) {
     return undefined;
   }, [filterValue, searchParams]);
 
-  const { data: threadsResponse, isLoading } = useThreads(folder, labels, searchValue.value);
+  const {
+    data: threadsResponse,
+    isLoading,
+    isValidating,
+  } = useThreads(searchValue.folder || folder, labels, searchValue.value);
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [isTransitioning, setIsTransitioning] = useState(true);
 
   // Check if we're on mobile on mount and when window resizes
   useEffect(() => {
@@ -108,18 +98,6 @@ export function Mail({ folder }: MailProps) {
     }
   }, [mail.selected]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      const timeout = setTimeout(() => {
-        setIsTransitioning(false);
-      }, 300);
-
-      return () => clearTimeout(timeout);
-    } else {
-      setIsTransitioning(true);
-    }
-  }, [isLoading]);
-
   const handleClose = useCallback(() => {
     setOpen(false);
     setMail((mail) => ({ ...mail, selected: null }));
@@ -131,15 +109,23 @@ export function Mail({ folder }: MailProps) {
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout"
-          className="rounded-inherit gap-1.5 overflow-hidden rounded-tl-md"
+          className="rounded-inherit gap-1.5 overflow-hidden"
         >
           <ResizablePanel
-            className="border-none !bg-transparent"
+            className={cn(
+              "border-none !bg-transparent",
+              mail?.selected ? "md:hidden lg:block" : "", // Hide on md, but show again on lg and up
+            )}
             defaultSize={isMobile ? 100 : 25}
             minSize={isMobile ? 100 : 25}
           >
-            <div className="flex-1 flex-col overflow-y-auto border bg-card shadow-sm md:flex md:rounded-2xl md:shadow-sm">
-              <div className="sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2">
+            <div className="flex-1 flex-col overflow-y-auto bg-offsetLight shadow-inner dark:bg-offsetDark md:flex md:rounded-2xl md:border md:shadow-sm">
+              <div
+                className={cn(
+                  "sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b-2 p-2 transition-colors",
+                  isValidating ? "border-b-green-500" : "border-b-transparent",
+                )}
+              >
                 <SidebarToggle className="h-fit px-2" />
                 <Button
                   variant="ghost"
@@ -186,7 +172,9 @@ export function Mail({ folder }: MailProps) {
                       </>
                     ) : (
                       <>
-                        <h1 className="flex-1 text-center text-sm font-medium">Inbox</h1>
+                        <h1 className="flex-1 text-center text-sm font-medium capitalize">
+                          {folder}
+                        </h1>
                         <div className="flex items-center gap-1.5">
                           <Button
                             variant="ghost"
@@ -200,27 +188,9 @@ export function Mail({ folder }: MailProps) {
                     )}
                   </>
                 )}
-                {mail.bulkSelected.length === 0 && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="md:h-fit md:px-2">
-                        <ListFilter className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setFilterValue("all")}>
-                        All mail {filterValue === "all" && <Check />}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setFilterValue("unread")}>
-                        Unread {filterValue === "unread" && <Check />}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
               </div>
-
-              <div className="h-[calc(100svh-(8px+8px+14px+44px-2px))] overflow-scroll p-2 pt-0">
-                {isLoading || isTransitioning ? (
+              <div className="h-[calc(100dvh-56px)] overflow-hidden pt-0 md:h-[calc(100dvh-(8px+8px+14px+44px))]">
+                {isLoading ? (
                   <div className="flex flex-col">
                     {[...Array(8)].map((_, i) => (
                       <div key={i} className="flex flex-col px-4 py-3">
@@ -269,12 +239,14 @@ export function Mail({ folder }: MailProps) {
         {/* Mobile Drawer */}
         {isMobile && (
           <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerContent className="h-[calc(100vh-3rem)] bg-card p-0">
+            <DrawerContent className="h-[calc(100vh-3rem)] overflow-hidden bg-offsetLight p-0 dark:bg-offsetDark">
               <DrawerHeader className="sr-only">
                 <DrawerTitle>Email Details</DrawerTitle>
               </DrawerHeader>
               <div className="flex h-full flex-col overflow-hidden">
-                <ThreadDisplay mail={mail.selected} onClose={handleClose} isMobile={true} />
+                <div className="flex-1 overflow-hidden">
+                  <ThreadDisplay mail={mail.selected} onClose={handleClose} isMobile={true} />
+                </div>
               </div>
             </DrawerContent>
           </Drawer>
