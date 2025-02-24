@@ -14,21 +14,25 @@ import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useOpenComposeModal } from "@/hooks/use-open-compose-modal";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { navigationConfig, NavItem } from "@/config/navigation";
+import { ArrowUpRight, CircleHelp, Pencil } from "lucide-react";
+import { useConnections } from "@/hooks/use-connections";
 import { useRouter, usePathname } from "next/navigation";
 import { keyboardShortcuts } from "@/config/shortcuts";
-import { ArrowUpRight } from "lucide-react";
-import { CircleHelp } from "lucide-react";
-import { Pencil } from "lucide-react";
+import { useSession, $fetch } from "@/lib/auth-client";
+import { IConnection } from "@/types";
+import { useState } from "react";
+import Image from "next/image";
+import { toast } from "sonner";
 import * as React from "react";
+
+type Props = {
+  children?: React.ReactNode | React.ReactNode[];
+};
 
 type CommandPaletteContext = {
   open: boolean;
   setOpen: (open: boolean) => void;
   openModal: () => void;
-};
-
-type Props = {
-  children?: React.ReactNode | React.ReactNode[];
 };
 
 const CommandPaletteContext = React.createContext<CommandPaletteContext | null>(null);
@@ -41,11 +45,15 @@ export function useCommandPalette() {
   return context;
 }
 
-export function CommandPalette({ children }: { children: React.ReactNode }) {
+export function CommandPaletteProvider({ children }: Props) {
   const [open, setOpen] = React.useState(false);
-  const { open: openComposeModal } = useOpenComposeModal(); // Correctly use open function
+  const { open: openComposeModal } = useOpenComposeModal();
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session, refetch } = useSession();
+  const { data: connections, mutate } = useConnections();
+  const [searchValue, setSearchValue] = useState("");
+
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -60,6 +68,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
+    setSearchValue(""); // Clear search input on command execution
     command();
   }, []);
 
@@ -108,13 +117,92 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     return filteredCommands;
   }, [pathname]);
 
+  const accountCommands = React.useMemo(() => {
+    if (!session?.user || !connections?.length) {
+      return [];
+    }
+
+    return connections
+      .filter((connection) => connection.id !== session.connectionId) // Exclude current account
+      .map((connection: IConnection) => ({
+        group: "Accounts",
+        item: {
+          title: `Switch to ${connection.email}`,
+          url: `/api/v1/mail/connections/${connection.id}`,
+          icon: () => (
+            <Image
+              src={connection.picture || "/placeholder.svg"}
+              alt={connection.name || connection.email}
+              width={16}
+              height={16}
+              className="h-4 w-4 rounded-full"
+            />
+          ),
+          onSelect: () => {
+            runCommand(() => {
+              // First, update the default connection ID in the database
+              fetch(`/api/v1/mail/connections/${connection.id}`, { method: "PUT" })
+                .then((response) => {
+                  if (response.ok) {
+                    console.log(`Successfully switched to account: ${connection.email}`);
+                    // THEN, update the session using better-auth's $fetch
+                    return $fetch("/api/auth/session", {
+                      method: "POST",
+                      body: JSON.stringify({ connectionId: connection.id }),
+                    }); // Update the session
+                  } else {
+                    console.error(`Failed to switch account: ${connection.email}`);
+                    // Display more specific error using sonner's toast
+                    response.json().then((data) => {
+                      toast.error("Error switching connection", {
+                        description: data.error, // Use more specific error message
+                      });
+                    });
+                    throw new Error("Failed to update default connection ID"); // Stop execution on failure
+                  }
+                })
+                .then(() => {
+                  // Refetch session and connections after successful update
+                  refetch(); // VERY IMPORTANT: Refetch the session
+                  mutate(); // Refetch the connections list
+                  router.refresh(); // AND refresh the router to update server state
+                  toast.success(`Successfully switched to account: ${connection.email}`); // Show a success message
+                })
+                .catch((error) => {
+                  console.error("Error during account switch:", error);
+                  toast.error("Error switching connection", { description: String(error) });
+                });
+            });
+          },
+        },
+      }));
+  }, [session, connections, router, runCommand, mutate, refetch]); // Added refetch
+
+  // Filter commands based on search
+  const filteredAccountCommands = React.useMemo(() => {
+    const searchTerm = searchValue.toLowerCase();
+    return accountCommands.filter(
+      (command) =>
+        command.item.title.toLowerCase().includes(searchTerm) || "switch".includes(searchTerm),
+    );
+  }, [accountCommands, searchValue]);
+
+  const filteredAllCommands = React.useMemo(() => {
+    const searchTerm = searchValue.toLowerCase();
+    return allCommands
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item.title.toLowerCase().includes(searchTerm)),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [allCommands, searchValue]);
+
   return (
     <CommandPaletteContext.Provider
       value={{
         open,
         setOpen,
         openModal: () => {
-          // Use openModal from context
           setOpen(false);
           openComposeModal();
         },
@@ -125,7 +213,12 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           <DialogTitle>0 - Command Palette</DialogTitle>
           <DialogDescription>Quick navigation and actions for 0.</DialogDescription>
         </VisuallyHidden>
-        <CommandInput autoFocus placeholder="Type a command or search..." />
+        <CommandInput
+          autoFocus
+          placeholder="Type a command or search..."
+          value={searchValue}
+          onValueChange={setSearchValue}
+        />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup>
@@ -139,7 +232,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
           </CommandGroup>
-          {allCommands.map((group, groupIndex) => (
+
+          {/* Render other command groups */}
+          {filteredAllCommands.map((group, groupIndex) => (
             <React.Fragment key={groupIndex}>
               {group.items.length > 0 && (
                 <CommandGroup heading={group.group}>
@@ -166,9 +261,24 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                   ))}
                 </CommandGroup>
               )}
-              {groupIndex < allCommands.length - 1 && <CommandSeparator />}
+              {groupIndex < filteredAllCommands.length - 1 && <CommandSeparator />}
             </React.Fragment>
           ))}
+
+          {/* Render filtered account commands */}
+          {filteredAccountCommands.length > 0 && (
+            <>
+              <CommandSeparator />
+              <CommandGroup heading="Accounts">
+                {filteredAccountCommands.map((account) => (
+                  <CommandItem key={account.item.url} onSelect={account.item.onSelect}>
+                    {account.item.icon && account.item.icon()}
+                    <span>{account.item.title}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
+          )}
           <CommandSeparator />
           <CommandGroup heading="Help">
             <CommandItem onSelect={() => runCommand(() => console.log("Help with shortcuts"))}>
@@ -197,11 +307,3 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     </CommandPaletteContext.Provider>
   );
 }
-
-export const CommandPaletteProvider = ({ children }: Props) => {
-  return (
-    <React.Suspense>
-      <CommandPalette>{children}</CommandPalette>
-    </React.Suspense>
-  );
-};
