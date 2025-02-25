@@ -14,15 +14,14 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { toast } from "sonner";
 import Link from "next/link";
+import axios from "axios";
 
 export default function ConnectEmails() {
   const { data: connections, mutate, isLoading: loading } = useConnections();
 
   const disconnectAccount = async (connectionId: string) => {
     try {
-      await fetch(`/api/v1/mail/connections/${connectionId}`, {
-        method: "DELETE",
-      });
+      await axios.delete(`/api/v1/mail/connections/${connectionId}`);
       toast.success("Account disconnected successfully");
       mutate(); // Refresh the list
     } catch (error) {

@@ -1,10 +1,6 @@
+const { default: flattenColorPalette } = require("tailwindcss/lib/util/flattenColorPalette");
 const defaultTheme = require("tailwindcss/defaultTheme");
 import type { Config } from "tailwindcss";
-
-const svgToDataUri = require("mini-svg-data-uri");
-
-const { default: flattenColorPalette } = require("tailwindcss/lib/util/flattenColorPalette");
-const colors = require("tailwindcss/colors");
 
 export default {
   darkMode: ["class"],
@@ -16,8 +12,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        offsetDark: "#0A0A0A",
+        offsetLight: "#F5F5F5",
+        logout: "#D93036",
+        subtleWhite: "#EAEAEA",
+        subtleBlack: "#1F1F1F",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        skyBlue: "#0066FF",
+        shinyGray: "#A1A1A1",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
@@ -115,21 +118,7 @@ export default {
     require("tailwindcss-animate"),
     addVariablesForColors,
     function ({ matchUtilities, theme }: any) {
-      matchUtilities(
-        {
-          "bg-grid": (value: any) => ({
-            backgroundImage: `url("${svgToDataUri(
-              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`,
-            )}")`,
-          }),
-          "bg-grid-small": (value: any) => ({
-            backgroundImage: `url("${svgToDataUri(
-              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="12" height="12" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`,
-            )}")`,
-          }),
-        },
-        { values: flattenColorPalette(theme("backgroundColor")), type: "color" },
-      );
+      matchUtilities({ values: flattenColorPalette(theme("backgroundColor")), type: "color" });
     },
   ],
 } satisfies Config;

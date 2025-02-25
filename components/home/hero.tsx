@@ -9,8 +9,10 @@ import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import Link from "next/link";
+import axios from "axios";
 import { z } from "zod";
 
 const betaSignupSchema = z.object({
@@ -32,31 +34,11 @@ export default function Hero() {
     try {
       console.log("Starting form submission with email:", values.email);
 
-      const response = await fetch("/api/auth/early-access", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: values.email }),
+      const response = await axios.post("/api/auth/early-access", {
+        email: values.email,
       });
 
-      // Log the raw response text first
-      const rawText = await response.text();
-      console.log("Raw response:", rawText);
-
-      // Try to parse as JSON
-      let data;
-      try {
-        data = JSON.parse(rawText);
-        console.log("Parsed response data:", data);
-      } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError);
-        throw new Error("Invalid server response");
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to sign up");
-      }
+      console.log("Response data:", response.data);
 
       form.reset();
       console.log("Form submission successful");
@@ -74,22 +56,42 @@ export default function Hero() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl animate-fade-in pt-20 md:px-0 md:pt-20">
-      <p className="px-1 text-center text-5xl font-medium sm:text-6xl md:px-0">Email, reimagined</p>
-      <Balancer className="mx-auto mt-3 max-w-2xl text-center text-lg text-muted-foreground">
-        Chat with your inbox using a modern, open source, and secure platform that puts you in
-        control.
-      </Balancer>
+    <div className="mx-auto w-full animate-fade-in pt-20 md:px-0 md:pt-20">
+      <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] sm:text-6xl md:px-0">
+        The future of email <span className="text-shinyGray">is here</span>
+      </p>
+      <div className="mx-auto w-full max-w-4xl">
+        <Balancer className="mx-auto mt-3 text-center text-[15px] leading-tight text-shinyGray sm:text-[22px]">
+          Experience email the way you want with <span className="font-mono">0</span> – the first
+          open source email app that puts your privacy and safety first.
+        </Balancer>
+      </div>
 
-      <Card className="mt-3 w-full border-none bg-transparent shadow-none">
+      <Card className="mt-4 w-full border-none bg-transparent shadow-none">
         <CardContent className="flex items-center justify-center px-0">
           {process.env.NODE_ENV === "development" ? (
-            <Button variant="outline" className="group h-9" asChild>
-              <Link href="/login">
-                Get Started
-                <ArrowRightIcon />
-              </Link>
-            </Button>
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                variant="outline"
+                className="flex h-[40px] w-[170px] items-center justify-center rounded-md bg-black text-white hover:bg-accent hover:text-white"
+                asChild
+              >
+                <Link href="/login">
+                  {" "}
+                  <Image src="/white-icon.svg" alt="Email" width={15} height={15} />
+                  Start Emailing
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="group h-[40px] w-[170px] rounded-md bg-white text-black hover:bg-white hover:text-black"
+                asChild
+              >
+                <Link target="_blank" href="https://cal.link/0-email">
+                  Contact Us
+                </Link>
+              </Button>
+            </div>
           ) : (
             <Form {...form}>
               <form

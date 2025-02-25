@@ -21,7 +21,7 @@ export default function Login() {
   if (isPending || (session && session.connectionId)) return null;
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-grid-small-black/[0.39] dark:bg-grid-small-white/[0.025]">
+    <div className="flex min-h-screen w-full items-center justify-center bg-white dark:bg-black">
       <div className="max-w-[500px] space-y-8 px-4 duration-500 animate-in slide-in-from-bottom-4 sm:px-12 md:px-0">
         <p className="text-center font-mono text-4xl font-bold md:text-5xl">Welcome to 0</p>
         <div className="flex w-full items-center justify-center">

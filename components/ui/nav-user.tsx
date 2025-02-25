@@ -103,8 +103,9 @@ export function NavUser() {
                       }
                       alt={activeAccount?.name || session?.user.name || "User"}
                     />
-                    <AvatarFallback className="relative overflow-hidden rounded-lg bg-black dark:bg-white">
-                      <span className="relative z-10 text-white dark:text-black">
+                    <AvatarFallback className="relative overflow-hidden rounded-lg">
+                      <div className="absolute inset-0" />
+                      <span className="relative z-10">
                         {(activeAccount?.name || session?.user.name || "User")
                           .split(" ")
                           .map((n) => n[0])
@@ -168,11 +169,11 @@ export function NavUser() {
                 <DropdownMenuItem
                   key={connection.id}
                   onClick={handleAccountSwitch(connection)}
-                  className={`flex cursor-pointer items-center gap-4 py-0.5 ${
+                  className={`flex cursor-pointer items-center gap-3 py-0.5 ${
                     connection.id === session?.connectionId ? "bg-accent" : ""
                   }`}
                 >
-                  <Avatar className="size-5 rounded-lg">
+                  <Avatar className="size-7 rounded-lg">
                     <AvatarImage
                       className="rounded-lg"
                       src={connection.picture || undefined}
@@ -210,8 +211,8 @@ export function NavUser() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
-                <LogOut size={16} strokeWidth={2} className="mr-1 opacity-60" aria-hidden="true" />
-                <p className="text-[13px] opacity-60">Log out</p>
+                <LogOut size={16} strokeWidth={2} className="mr-1" aria-hidden="true" />
+                <p className="text-[13px]">Log out</p>
               </DropdownMenuItem>
             </>
           ) : (

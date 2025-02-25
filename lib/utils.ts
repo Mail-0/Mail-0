@@ -3,6 +3,7 @@ import { MAX_URL_LENGTH } from "./constants";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import LZString from "lz-string";
+import axios from "axios";
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
@@ -47,3 +48,5 @@ export const truncateFileName = (name: string, maxLength = 15) => {
   }
   return `${name.slice(0, maxLength)}...`;
 };
+
+export const fetcher = (url: string) => axios.get(url).then((res) => res.data);

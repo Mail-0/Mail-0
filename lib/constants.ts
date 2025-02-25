@@ -62,17 +62,32 @@ export const EMAIL_HTML_TEMPLATE = `
       <base target="_blank" />
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
       <style>
         body {
           margin: 0;
           padding: 16px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+          font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
           line-height: 1.5;
           height: fit-content;
+          background-color: rgb(245, 245, 245) !important;
+        }
+        @media (prefers-color-scheme: dark) {
+          body {
+            background-color: rgb(10, 10, 10) !important;
+          }
         }
         .auto-details summary::marker {
            content: "...";
            cursor: pointer;
+        }
+        .geist-400 {
+          font-family: "Geist", serif;
+          font-optical-sizing: auto;
+          font-weight: 400;
+          font-style: normal;
         }
       </style>
     </head>
