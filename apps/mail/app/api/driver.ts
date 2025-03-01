@@ -22,7 +22,8 @@ interface MailManager {
   ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
   getUserInfo(tokens: IConfig["auth"]): Promise<any>;
   getScope(): string;
-  markAsRead(id: string): Promise<void>;
+  markAsRead(id: string[]): Promise<void>;
+  markAsUnread(id: string[]): Promise<void>;
 }
 
 interface IConfig {
@@ -109,12 +110,12 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
       references,
       inReplyTo,
       sender: {
-        name: name ? name.replace(/"/g, "").trim() : 'Unknown',
+        name: name ? name.replace(/"/g, "").trim() : "Unknown",
         email: `<${email}`,
       },
       unread: labelIds ? labelIds.includes("UNREAD") : false,
       receivedOn,
-      subject: subject ? subject.replace(/"/g, "").trim() : 'No subject',
+      subject: subject ? subject.replace(/"/g, "").trim() : "No subject",
       messageId,
     };
   };
@@ -126,12 +127,21 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
   };
   const gmail = google.gmail({ version: "v1", auth });
   return {
-    markAsRead: async (id: string) => {
-      await gmail.users.messages.modify({
+    markAsRead: async (id: string[]) => {
+      await gmail.users.messages.batchModify({
         userId: "me",
-        id,
         requestBody: {
+          ids: id,
           removeLabelIds: ["UNREAD"],
+        },
+      });
+    },
+    markAsUnread: async (id: string[]) => {
+      await gmail.users.messages.batchModify({
+        userId: "me",
+        requestBody: {
+          ids: id,
+          addLabelIds: ["UNREAD"],
         },
       });
     },
