@@ -20,6 +20,7 @@ import { MailDisplaySkeleton, MailHeaderSkeleton } from "./mail-skeleton";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useThread } from "@/hooks/use-threads";
+import ThreadSubject from "./thread-subject";
 import ReplyCompose from "./reply-composer";
 import MailDisplay from "./mail-display";
 import { useMail } from "./use-mail";
@@ -212,6 +213,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
           </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <ThreadSubject subject={emailData[0]?.subject} />
           <ScrollArea className="flex-1" type="scroll">
             <div className="pb-4">
               {[...(emailData || [])].reverse().map((message, index) => (

@@ -92,8 +92,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
       payload?.headers?.find((h) => h.name?.toLowerCase() === "date")?.value || "Failed";
     const sender =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "from")?.value || "Failed";
-    const subject =
-      payload?.headers?.find((h) => h.name?.toLowerCase() === "subject")?.value || "Failed";
+    const subject = payload?.headers?.find((h) => h.name?.toLowerCase() === "subject")?.value || "";
     const references =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "references")?.value || "";
     const inReplyTo =
