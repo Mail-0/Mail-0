@@ -13,6 +13,17 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  mail0:
+    depends_on:
+      - db
+    build: .
+    container_name: mail0-interface
+    image: node:22-slim
+    restart: always
+    env_file: .env
+    ports:
+      - "3000:3000"
+      
   valkey:
     container_name: mail0-redis
     image: docker.io/bitnami/valkey:8.0
