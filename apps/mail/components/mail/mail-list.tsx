@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { ThreadContextMenu } from "../context/thread-context";
 import { useParams } from "next/navigation";
 import { useSummary } from "@/hooks/use-summary";
+import { AlertTriangle, Tag, User, Bell, Briefcase, Users } from "lucide-react";
 
 interface MailListProps {
   isCompact?: boolean;
@@ -163,7 +164,9 @@ const Thread = ({ message, selectMode, onSelect, isCompact }: ThreadProps) => {
                 {message.unread ? (
                   <span className="ml-0.5 size-2 rounded-full bg-[#006FFE]" />
                 ) : null}
+                
               </p>
+              <MailLabels labels={message.tags} />
             </div>
             {message.receivedOn ? (
               <p
@@ -579,17 +582,41 @@ function MailLabels({ labels }: { labels: string[] }) {
   if (!visibleLabels.length) return null;
 
   return (
-    // TODO: When clicking on a label, apply filter to show only messages with that label.
-    <div className={cn("mt-1.5 flex select-none items-center gap-2")}>
-      {visibleLabels.map((label) => (
-        <Badge key={label} className="rounded-full" variant={getDefaultBadgeStyle(label)}>
-          <p className="text-xs font-medium lowercase">
-            {label.replace(/^category_/i, "").replace(/_/g, " ")}
-          </p>
-        </Badge>
-      ))}
+    <div className={cn("flex select-none items-center gap-1")}>
+      {visibleLabels.map((label) => {
+        const style = getDefaultBadgeStyle(label);
+        // Skip rendering if style is "secondary" (default case)
+        if (style === "secondary") return null;
+        
+        return (
+          <Badge key={label} className="rounded-full p-1" variant={style}>
+            {getLabelIcon(label)}
+          </Badge>
+        );
+      })}
     </div>
   );
+}
+
+function getLabelIcon(label: string) {
+  const normalizedLabel = label.toLowerCase().replace(/^category_/i, "");
+
+  switch (normalizedLabel) {
+    case "important":
+      return <AlertTriangle className="h-3 w-3" />;
+    case "promotions":
+      return <Tag className="h-3 w-3 rotate-90" />;
+    case "personal":
+      return <User className="h-3 w-3" />;
+    case "updates":
+      return <Bell className="h-3 w-3" />;
+    case "work":
+      return <Briefcase className="h-3 w-3" />;
+    case "forums":
+      return <Users className="h-3 w-3" />;
+    default:
+      return null;
+  }
 }
 
 function getDefaultBadgeStyle(label: string): ComponentProps<typeof Badge>["variant"] {
