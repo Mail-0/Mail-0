@@ -3,8 +3,8 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { AlignVerticalSpaceAround, ArchiveX, BellOff, SearchIcon, X } from "lucide-react";
-import { useState, useCallback, useMemo, useEffect, ReactNode } from "react";
+import { AlignVerticalSpaceAround, ArchiveX, BellOff, SearchIcon, X, Inbox, Tag, Users, AlertTriangle, MessageSquare, User, Bell } from "lucide-react";
+import { useState, useCallback, useMemo, useEffect, ReactNode, useRef } from "react";
 import { ThreadDisplay } from "@/components/mail/thread-display";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { useSearchValue } from "@/hooks/use-search-value";
@@ -12,7 +12,6 @@ import { MailList } from "@/components/mail/mail-list";
 import { useMail } from "@/components/mail/use-mail";
 import { SidebarToggle } from "../ui/sidebar-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type Mail } from "@/components/mail/data";
 import { useParams, useSearchParams } from "next/navigation";
 import { useThreads } from "@/hooks/use-threads";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ export function MailLayout() {
   const [searchMode, setSearchMode] = useState(false);
   const [searchValue] = useSearchValue();
   const [mail, setMail] = useMail();
-  const [isCompact, setIsCompact] = useState(false);
   const searchParams = useSearchParams();
   const [isMobile, setIsMobile] = useState(false);
   const [filterValue, setFilterValue] = useState<"all" | "unread">("all");
@@ -112,7 +110,7 @@ export function MailLayout() {
           <ResizablePanel
             className={cn(
               "border-none !bg-transparent",
-              mail?.selected ? "md:hidden lg:block" : "", // Hide on md, but show again on lg and up
+              mail?.selected ? "md:hidden lg:block" : "",
             )}
             defaultSize={isMobile ? 100 : 25}
             minSize={isMobile ? 100 : 25}
@@ -125,13 +123,6 @@ export function MailLayout() {
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
-                <Button
-                  variant="ghost"
-                  className="md:h-fit md:px-2"
-                  onClick={() => setIsCompact(!isCompact)}
-                >
-                  <AlignVerticalSpaceAround />
-                </Button>
                 {searchMode && (
                   <div className="flex flex-1 items-center justify-center gap-1.5">
                     <SearchBar />
@@ -144,6 +135,7 @@ export function MailLayout() {
                     </Button>
                   </div>
                 )}
+                
                 {!searchMode && (
                   <>
                     {mail.bulkSelected.length > 0 ? (
@@ -170,9 +162,9 @@ export function MailLayout() {
                       </>
                     ) : (
                       <>
-                        <h1 className="flex-1 text-center text-sm font-medium capitalize">
-                          {folder}
-                        </h1>
+                        <div className="flex-1 text-center text-sm font-medium capitalize">
+                          <MailCategoryTabs />
+                        </div>
                         <div className="flex items-center gap-1.5">
                           <Button
                             variant="ghost"
@@ -209,7 +201,7 @@ export function MailLayout() {
                   </div>
                 ) : (
                     <MailList
-                      isCompact={isCompact}
+                      isCompact={true}
                   />
                 )}
               </div>
@@ -271,6 +263,135 @@ function BulkSelectActions() {
         </TooltipTrigger>
         <TooltipContent>Move to Spam</TooltipContent>
       </Tooltip>
+    </div>
+  );
+}
+
+function MailCategoryTabs() {
+  const [, setSearchValue] = useSearchValue();
+  const [activeCategory, setActiveCategory] = useState("Primary");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const activeTabElementRef = useRef<HTMLButtonElement>(null);
+
+  const categories = [
+    { 
+      name: "Primary", 
+      searchValue: "",
+      icon: <Inbox className="h-4 w-4" />,
+      colors: "border-0 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70"
+    },
+    { 
+      name: "Important", 
+      searchValue: "IMPORTANT",
+      icon: <AlertTriangle className="h-4 w-4" />,
+      colors: "border-0 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30"
+    },
+    { 
+      name: "Personal", 
+      searchValue: "PERSONAL",
+      icon: <User className="h-4 w-4" />,
+      colors: "border-0 bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30"
+    },
+    { 
+      name: "Updates", 
+      searchValue: "UPDATES",
+      icon: <Bell className="h-4 w-4" />,
+      colors: "border-0 bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30"
+    },
+    { 
+      name: "Promotions", 
+      searchValue: "PROMOTIONS",
+      icon: <Tag className="h-4 w-4 rotate-90" />,
+      colors: "border-0 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30"
+    },
+  ];
+
+  const activeTab = categories.find(cat => cat.name === activeCategory);
+
+  useEffect(() => {
+    if (activeTab) {
+      const value = activeTab.name === "Primary" 
+        ? ""
+        : `has:${activeTab.searchValue.toLowerCase()}`
+      
+      setSearchValue({
+        value,
+        highlight: "",
+        folder: "",
+      });
+    }
+  }, [activeCategory, setSearchValue]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+
+    if (activeCategory && container) {
+      const activeTabElement = activeTabElementRef.current;
+
+      if (activeTabElement) {
+        const { offsetLeft, offsetWidth } = activeTabElement;
+
+        const clipLeft = offsetLeft;
+        const clipRight = offsetLeft + offsetWidth;
+        const containerWidth = container?.offsetWidth;
+        if (containerWidth) {
+          container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed()}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed()}% round 17px)`;
+        }
+      }
+    }
+  }, [activeCategory, activeTabElementRef, containerRef]);
+
+  return (
+    <div className="relative w-fit mx-auto">
+      <ul className="flex justify-center gap-1.5">
+        {categories.map((category) => (
+          <li key={category.name}>
+            <button
+              ref={activeCategory === category.name ? activeTabElementRef : null}
+              data-tab={category.name}
+              onClick={() => {
+                setActiveCategory(category.name);
+              }}
+              className={cn(
+                "flex h-7 items-center gap-1.5 px-2.5 text-xs font-medium rounded-full transition-all duration-200",
+                activeCategory === category.name 
+                  ? category.colors
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              {category.icon}
+              <span className="hidden md:inline">{category.name}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <div 
+        aria-hidden 
+        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out shadow-sm " 
+        ref={containerRef}
+      >
+        <ul className="flex justify-center gap-1.5">
+          {categories.map((category) => (
+            <li key={category.name}>
+              <button
+                data-tab={category.name}
+                onClick={() => {
+                  setActiveCategory(category.name);
+                }}
+                className={cn(
+                  "flex h-7 items-center gap-1.5 px-2.5 text-xs font-medium rounded-full",
+                  category.colors
+                )}
+                tabIndex={-1}
+              >
+                {category.icon}
+                <span className="hidden md:inline">{category.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
