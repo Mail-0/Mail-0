@@ -9,6 +9,48 @@ import { ParsedMessage } from "@/types";
 import { Button } from "../ui/button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useSummary } from "@/hooks/use-summary";
+
+const StreamingText = ({ text }: { text: string }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    let currentIndex = 0;
+    setIsComplete(false);
+    setDisplayText("");
+
+    const interval = setInterval(() => {
+      if (currentIndex < text.length) {
+        const nextChar = text[currentIndex];
+        setDisplayText((prev) => prev + nextChar);
+        currentIndex++;
+      } else {
+        setIsComplete(true);
+        clearInterval(interval);
+      }
+    }, 40); // Slower typing speed for better readability
+
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={cn(
+          "bg-gradient-to-r from-neutral-500 via-neutral-300 to-neutral-500 bg-[length:200%_100%] bg-clip-text text-sm leading-relaxed text-transparent",
+          isComplete ? "animate-shine-slow" : "",
+        )}
+      >
+        {displayText}
+        {isComplete ? null : (
+          <span className="animate-blink bg-primary ml-0.5 inline-block h-4 w-0.5"></span>
+        )}
+      </div>
+    </div>
+  );
+};
 
 type Props = {
   emailData: ParsedMessage;
@@ -21,6 +63,7 @@ type Props = {
 const MailDisplay = ({ emailData, isFullscreen, isMuted, index }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
+  const { data } = useSummary(emailData.id)
 
   useEffect(() => {
     if (index === 0) {
@@ -121,20 +164,39 @@ const MailDisplay = ({ emailData, isFullscreen, isMuted, index }: Props) => {
                       </div>
                     </PopoverContent>
                   </Popover>
+                  <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(!isCollapsed)}>
+                    {isCollapsed ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronUp className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>
-            <div className="flex justify-end">
-              <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(!isCollapsed)}>
-                {isCollapsed ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronUp className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+            {data ? <div className="relative">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button size={'icon'} variant='ghost' className='rounded-full'>
+                    <Image src="/ai.svg" alt="logo" className="h-4 w-4" width={100} height={100} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="rounded-lg border p-3 shadow-lg">
+                  <StreamingText text={data.content} />
+                </PopoverContent>
+              </Popover>
+            </div> : null}
           </div>
         </div>
+        <div
+          className={cn(
+            "h-0 overflow-hidden transition-all duration-200",
+            !isCollapsed && "h-[1px]",
+          )}
+        >
+          <Separator />
+        </div>
+
         <div
           className={cn(
             "h-0 overflow-hidden transition-all duration-200",

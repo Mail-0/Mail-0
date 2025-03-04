@@ -7,26 +7,19 @@ import { navigationConfig } from "@/config/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useSession } from "@/lib/auth-client";
 import React, { useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useAISidebar } from "./ai-sidebar";
-import { mailCount } from "@/actions/mail";
-import { Brain } from "lucide-react";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { Button } from "./button";
 import Image from "next/image";
-import { toast } from "sonner";
-import useSWR from "swr";
+import { useStats } from "@/hooks/use-stats";
+import { FOLDERS } from "@/lib/utils";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession();
-  const { data: stats } = useSWR<{ folder: string; count: number }[]>(
-    session?.connectionId ? `/mail-count/${session?.connectionId}` : null,
-    mailCount,
-  );
+  const { data: stats } = useStats();
 
   const pathname = usePathname();
 
@@ -42,10 +35,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       if (currentSection === "mail" && stats) {
         if (items[0]?.items[0]) {
-          items[0].items[0].badge = stats.find((stat) => stat.folder === "INBOX")?.count ?? 0;
+          items[0].items[0].badge = stats.find((stat) => stat.label.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
         }
         if (items[0]?.items[3]) {
-          items[0].items[3].badge = stats.find((stat) => stat.folder === "SENT")?.count ?? 0;
+          items[0].items[3].badge = stats.find((stat) => stat.label.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
         }
       }
 

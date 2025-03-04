@@ -9,16 +9,13 @@ import {
   SidebarGroup,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarGroupLabel,
   SidebarMenuButton,
 } from "./sidebar";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useSession } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
 import { BASE_URL } from "@/lib/constants";
-import { mailCount } from "@/actions/mail";
 import { cn } from "@/lib/utils";
-import useSWR from "swr";
+import { useStats } from "@/hooks/use-stats";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -180,11 +177,7 @@ export function NavMain({ items }: NavMainProps) {
 
 function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
-  const { data: session } = useSession();
-  const { data: stats } = useSWR<{ folder: string; count: number }[]>(
-    session?.connectionId ? `/mail-count/${session?.connectionId}` : null,
-    mailCount,
-  );
+  const { data: stats } = useStats();
 
   if (item.disabled) {
     return (
@@ -218,9 +211,9 @@ function NavItem(item: NavItemProps & { href: string }) {
     >
       {item.icon && <item.icon ref={!item.isBackButton ? iconRef : undefined} className="" />}
       <p className="mt-0.5 text-[13px]">{item.title}</p>
-      {stats && stats.find((stat) => stat.folder === item.title.toLowerCase()) && (
+      {stats && stats.find((stat) => stat.label.toLowerCase() === item.title.toLowerCase()) && (
         <Badge className="ml-auto" variant="outline">
-          {stats.find((stat) => stat.folder === item.title.toLowerCase())?.count}
+          {stats.find((stat) => stat.label.toLowerCase() === item.title.toLowerCase())?.count}
         </Badge>
       )}
     </SidebarMenuButton>

@@ -1,11 +1,5 @@
 "use server";
-
-import { account, connection } from "@zero/db/schema";
-import { createDriver } from "@/app/api/driver";
-import { headers } from "next/headers";
-import { and, eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
-import { db } from "@zero/db";
+import { getActiveDriver } from "./utils";
 
 export const getMails = async ({
   folder,
@@ -24,91 +18,32 @@ export const getMails = async ({
     throw new Error("Missing required fields");
   }
 
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-
-  if (!session || !session.connectionId) {
-    throw new Error("Unauthorized, reconnect");
-  }
-
-  const [_connection] = await db
-    .select()
-    .from(connection)
-    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
-
-  if (!_connection?.accessToken || !_connection.refreshToken) {
-    throw new Error("Unauthorized, reconnect");
-  }
-
-  const driver = await createDriver(_connection.providerId, {
-    auth: {
-      access_token: _connection.accessToken,
-      refresh_token: _connection.refreshToken,
-    },
-  });
-
+  try {
+    const driver = await getActiveDriver();
   return await driver.list(folder, q, max, labelIds, pageToken);
+  } catch (error) {
+    console.error("Error getting threads:", error);
+    throw error;
+  }
 };
 
 export const getMail = async ({ id }: { id: string }) => {
   if (!id) {
     throw new Error("Missing required fields");
   }
-
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-
-  if (!session || !session.connectionId) {
-    throw new Error("Unauthorized, reconnect");
+  try {
+    const driver = await getActiveDriver();
+    return await driver.get(id);
+  } catch (error) {
+    console.error("Error getting mail:", error);
+    throw error;
   }
-
-  // Updated to use googleConnection table
-  const [_connection] = await db
-    .select()
-    .from(connection)
-    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
-
-  if (!_connection?.accessToken || !_connection.refreshToken) {
-    throw new Error("Unauthorized, reconnect");
-  }
-
-  const driver = await createDriver(_connection.providerId, {
-    // Assuming "google" is the provider ID
-    auth: {
-      access_token: _connection.accessToken,
-      refresh_token: _connection.refreshToken,
-    },
-  });
-
-  return await driver.get(id);
 };
 
 export const markAsRead = async ({ ids }: { ids: string[] }) => {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-
-  if (!session || !session.connectionId) {
-    throw new Error("Unauthorized, reconnect");
-  }
-
-  const [_connection] = await db
-    .select()
-    .from(connection)
-    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
-
-  if (!_connection?.accessToken || !_connection.refreshToken) {
-    throw new Error("Unauthorized, reconnect");
-  }
-
-  const driver = await createDriver(_connection.providerId, {
-    // Assuming "google" is the provider ID
-    auth: {
-      access_token: _connection.accessToken,
-      refresh_token: _connection.refreshToken,
-    },
-  });
 
   try {
+    const driver = await getActiveDriver();
     await driver.markAsRead(ids);
     return { success: true };
   } catch (error) {
@@ -118,31 +53,8 @@ export const markAsRead = async ({ ids }: { ids: string[] }) => {
 };
 
 export const markAsUnread = async ({ ids }: { ids: string[] }) => {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-
-  if (!session || !session.connectionId) {
-    throw new Error("Unauthorized, reconnect");
-  }
-
-  const [_connection] = await db
-    .select()
-    .from(connection)
-    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
-
-  if (!_connection?.accessToken || !_connection.refreshToken) {
-    throw new Error("Unauthorized, reconnect");
-  }
-
-  const driver = await createDriver(_connection.providerId, {
-    // Assuming "google" is the provider ID
-    auth: {
-      access_token: _connection.accessToken,
-      refresh_token: _connection.refreshToken,
-    },
-  });
-
   try {
+    const driver = await getActiveDriver();
     await driver.markAsUnread(ids);
     return { success: true };
   } catch (error) {
@@ -152,28 +64,45 @@ export const markAsUnread = async ({ ids }: { ids: string[] }) => {
 };
 
 export const mailCount = async () => {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-
-  if (!session || !session.connectionId) {
-    throw new Error("Unauthorized, reconnect");
+  try {
+    const driver = await getActiveDriver();
+    return await driver.count();
+  } catch (error) {
+    console.error("Error getting mail count:", error);
+    throw error;
   }
+};
 
-  const [_connection] = await db
-    .select()
-    .from(connection)
-    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
+export const modifyLabels = async ({
+  threadId,
+  addLabels = [],
+  removeLabels = []
+}: {
+    threadId: string[];
+  addLabels?: string[];
+  removeLabels?: string[];
+}) => {
+  console.log(`Server: updateThreadLabels called for thread ${threadId}`);
+  console.log(`Adding labels: ${addLabels.join(', ')}`);
+  console.log(`Removing labels: ${removeLabels.join(', ')}`);
 
-  if (!_connection?.accessToken || !_connection.refreshToken) {
-    throw new Error("Unauthorized, reconnect");
+  try {
+    const driver = await getActiveDriver();
+    const { threadIds } = driver.normalizeIds(threadId);
+
+    if (threadIds.length) {
+      await driver.modifyLabels(threadIds, {
+        addLabels,
+        removeLabels
+      });
+      console.log("Server: Successfully updated thread labels");
+      return { success: true };
+    }
+
+    console.log("Server: No label changes specified");
+    return { success: false, error: "No label changes specified" };
+  } catch (error) {
+    console.error("Server: Error updating thread labels:", error);
+    return { success: false, error: String(error) };
   }
-
-  const driver = await createDriver(_connection.providerId, {
-    auth: {
-      access_token: _connection.accessToken,
-      refresh_token: _connection.refreshToken,
-    },
-  });
-
-  return await driver.count();
 };

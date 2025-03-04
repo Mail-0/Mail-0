@@ -61,7 +61,7 @@ export default function GeneralPage() {
   }
 
   const handleSignOut = async () => {
-    await toast.promise(
+    toast.promise(
       signOut({
         fetchOptions: {
           onSuccess: () => {

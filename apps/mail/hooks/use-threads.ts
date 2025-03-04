@@ -66,7 +66,7 @@ export const useThreads = (
 ) => {
   const { data: session } = useSession();
 
-  const { data, error, size, setSize, isLoading, isValidating } = useSWRInfinite<RawResponse>(
+  const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite<RawResponse>(
     (pageIndex, previousPageData) =>
       session?.user.id 
         ? getKey(
@@ -80,7 +80,8 @@ export const useThreads = (
           session.connectionId ?? undefined
         )
         : null,
-    fetchEmails as any
+    fetchEmails as any,
+    { revalidateAll: true, revalidateOnMount: true, parallel: true }
   );
 
   const threads = data ? data.flatMap(page => page.threads) : [];
@@ -98,6 +99,7 @@ export const useThreads = (
     error,
     loadMore,
     isReachingEnd,
+    mutate
   };
 };
 

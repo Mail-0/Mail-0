@@ -11,10 +11,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <SWRConfig
           value={{
             provider: typeof window !== "undefined" ? dexieStorageProvider : undefined,
-            keepPreviousData: true,
             revalidateOnFocus: false,
             revalidateIfStale: false,
-            revalidateOnMount: true
           }}
         >
           {children}

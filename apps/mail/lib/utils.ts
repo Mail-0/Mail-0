@@ -5,6 +5,34 @@ import { twMerge } from "tailwind-merge";
 import LZString from "lz-string";
 import axios from "axios";
 
+export const FOLDERS = {
+  SPAM: 'spam',
+  INBOX: 'inbox',
+  ARCHIVE: 'archive',
+  TRASH: 'trash',
+  DRAFT: 'draft',
+  SENT: 'sent',
+} as const;
+
+export const LABELS = {
+  SPAM: 'SPAM',
+  INBOX: 'INBOX',
+  UNREAD: 'UNREAD',
+  IMPORTANT: 'IMPORTANT',
+  SENT: 'SENT',
+} as const;
+
+export const FOLDER_TAGS: Record<string, string[]> = {
+  [FOLDERS.SPAM]: [LABELS.SPAM],
+  [FOLDERS.INBOX]: [LABELS.INBOX],
+  [FOLDERS.ARCHIVE]: [],
+  [FOLDERS.SENT]: [LABELS.SENT],
+};
+
+export const getFolderTags = (folder: string): string[] => {
+  return FOLDER_TAGS[folder] || [];
+}; 
+
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 export const compressText = (text: string): string => {

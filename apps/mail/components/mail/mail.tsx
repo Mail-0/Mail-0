@@ -13,7 +13,7 @@ import { useMail } from "@/components/mail/use-mail";
 import { SidebarToggle } from "../ui/sidebar-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type Mail } from "@/components/mail/data";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useThreads } from "@/hooks/use-threads";
 import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
@@ -22,20 +22,8 @@ import { useRouter } from "next/navigation";
 import { SearchBar } from "./search-bar";
 import { cn } from "@/lib/utils";
 
-interface MailProps {
-  accounts: {
-    label: string;
-    email: string;
-    icon: ReactNode;
-  }[];
-  folder: string;
-  defaultLayout: number[] | undefined;
-  defaultCollapsed?: boolean;
-  navCollapsedSize: number;
-  muted?: boolean;
-}
-
-export function Mail({ folder }: MailProps) {
+export function MailLayout() {
+  const { folder } = useParams<{ folder: string }>()
   const [searchMode, setSearchMode] = useState(false);
   const [searchValue] = useSearchValue();
   const [mail, setMail] = useMail();
@@ -71,11 +59,8 @@ export function Mail({ folder }: MailProps) {
     return undefined;
   }, [filterValue, searchParams]);
 
-  const {
-    data: threadsResponse,
-    isLoading,
-    isValidating,
-  } = useThreads(searchValue.folder || folder, labels, searchValue.value);
+  const { isLoading, isValidating } = useThreads(folder, undefined, searchValue.value, 20);
+
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -133,12 +118,10 @@ export function Mail({ folder }: MailProps) {
             minSize={isMobile ? 100 : 25}
           >
             <div className="bg-offsetLight dark:bg-offsetDark flex-1 flex-col overflow-y-auto shadow-inner md:flex md:rounded-2xl md:border md:shadow-sm">
+              <div className={cn("compose-gradient h-0.5 w-full transition-opacity", isValidating ? "opacity-50" : "opacity-0")} />
               <div
                 className={cn(
-                  "sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b-2 p-2 transition-colors",
-                  isValidating 
-                    ? "border-b-[linear-gradient(90deg,rgba(255,213,208,1)_0%,rgba(219,255,228,1)_50%,rgba(226,214,255,1)_100%)]" 
-                    : "border-b-transparent",
+                  "sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2 transition-colors",
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
@@ -225,10 +208,8 @@ export function Mail({ folder }: MailProps) {
                     ))}
                   </div>
                 ) : (
-                  <MailList
-                    items={threadsResponse?.threads || []}
-                    isCompact={isCompact}
-                    folder={folder}
+                    <MailList
+                      isCompact={isCompact}
                   />
                 )}
               </div>
@@ -288,7 +269,7 @@ function BulkSelectActions() {
             <ArchiveX />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Move to Junk</TooltipContent>
+        <TooltipContent>Move to Spam</TooltipContent>
       </Tooltip>
     </div>
   );
