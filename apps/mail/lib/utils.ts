@@ -78,3 +78,20 @@ export const truncateFileName = (name: string, maxLength = 15) => {
 };
 
 export const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+
+export type FilterSuggestion = {
+  filter: string;
+  description: string;
+  icon: React.ReactNode;
+  prefix: string;
+};
+
+
+export const extractFilterValue = (filter: string): string => {
+  if (!filter || !filter.includes(':')) return '';
+  
+  const colonIndex = filter.indexOf(':');
+  const value = filter.substring(colonIndex + 1);
+  
+  return value || '';
+};
