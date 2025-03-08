@@ -5,13 +5,13 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 ## Table of Contents
 
 - [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
 - [Development Workflow](#development-workflow)
-- [Pull Request Process](#pull-request-process)
 - [Coding Guidelines](#coding-guidelines)
 - [Testing](#testing)
 - [Documentation](#documentation)
+- [Areas of Contribution](#areas-of-contribution)
 - [Community](#community)
+- [Questions or Need Help?](#questions-or-need-help)
 
 ## Getting Started
 
@@ -22,9 +22,9 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 
 2. **Set Up Development Environment**
    - Install Node.js (v16 or higher)
-   - Install required dependencies: `npm install`
+   - Install required dependencies: `pnpm install`
    - Copy `.env.example` to `.env` and configure your environment variables
-   - Set up your Google OAuth credentials (see README.md)
+   - Set up your Google OAuth credentials (see [README.md](../README.md))
 
 ## Development Workflow
 
