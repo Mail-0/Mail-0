@@ -6,9 +6,10 @@ import { ShieldCheckIcon } from "@/components/icons/animated/shield";
 import { KeyboardIcon } from "@/components/icons/animated/keyboard";
 import { SparklesIcon } from "@/components/icons/animated/sparkles";
 import { ArchiveIcon } from "@/components/icons/animated/archive";
+import { SyringeIcon } from "@/components/icons/animated/syringe";
+import { DeleteIcon } from "@/components/icons/animated/trash";
 import { UsersIcon } from "@/components/icons/animated/users";
 import { InboxIcon } from "@/components/icons/animated/inbox";
-import { DeleteIcon } from "@/components/icons/animated/trash";
 import { XIcon } from "@/components/icons/animated/x";
 export interface NavItem {
   title: string;
@@ -130,11 +131,15 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: ArrowLeftIcon,
             isBackButton: true,
           },
-
           {
             title: "General",
             url: "/settings/general",
             icon: SettingsGearIcon,
+          },
+          {
+            title: "Plugins",
+            url: "/settings/plugins",
+            icon: SyringeIcon,
           },
           {
             title: "Connections",
