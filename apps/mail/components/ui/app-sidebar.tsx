@@ -9,14 +9,14 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import React, { useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { useStats } from "@/hooks/use-stats";
 import { useRouter } from "next/navigation";
 import { useAISidebar } from "./ai-sidebar";
+import { FOLDERS } from "@/lib/utils";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { Button } from "./button";
 import Image from "next/image";
-import { useStats } from "@/hooks/use-stats";
-import { FOLDERS } from "@/lib/utils";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: stats } = useStats();
@@ -35,10 +35,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       if (currentSection === "mail" && stats && stats.length) {
         if (items[0]?.items[0]) {
-          items[0].items[0].badge = stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
+          items[0].items[0].badge =
+            stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
         }
         if (items[0]?.items[3]) {
-          items[0].items[3].badge = stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
+          items[0].items[3].badge =
+            stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
         }
       }
 
@@ -55,8 +57,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const { toggleOpen: toggleAISidebar } = useAISidebar();
 
+  console.log(stats);
+
   return (
-    <Sidebar collapsible="icon" {...props} className="flex flex-col items-center bg-offsetWhite dark:bg-offsetDark">
+    <Sidebar
+      collapsible="icon"
+      {...props}
+      className="bg-offsetWhite dark:bg-offsetDark flex flex-col items-center"
+    >
       <div className="flex w-full flex-col">
         <SidebarHeader className="flex flex-col gap-2 p-2">
           <NavUser />
