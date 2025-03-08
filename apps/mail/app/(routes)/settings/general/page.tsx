@@ -18,12 +18,12 @@ import {
 import { SettingsCard } from "@/components/settings/settings-card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Clock, LogOut } from "lucide-react";
+import { useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
 
@@ -36,7 +36,7 @@ const formSchema = z.object({
 
 export default function GeneralPage() {
   const router = useRouter();
-  const [isSaving, setIsSaving] = useState(false);
+  const { settings, updateSettings, isPending } = useSettings();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,18 +46,11 @@ export default function GeneralPage() {
       dynamicContent: false,
       externalImages: true,
     },
+    values: settings,
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSaving(true);
-
-    // TODO: Save settings in user's account
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
-      setIsSaving(false);
-    }, 1000);
+    updateSettings(values);
   }
 
   const handleSignOut = async () => {
@@ -88,8 +81,8 @@ export default function GeneralPage() {
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </Button>
-            <Button type="submit" form="general-form" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save changes"}
+            <Button type="submit" form="general-form" disabled={isPending}>
+              {isPending ? "Saving..." : "Save changes"}
             </Button>
           </div>
         }
@@ -121,7 +114,6 @@ export default function GeneralPage() {
                 control={form.control}
                 name="timezone"
                 render={({ field }) => (
-                  // TODO: Add all timezones
                   <FormItem>
                     <FormLabel>Timezone</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -151,7 +143,7 @@ export default function GeneralPage() {
                 control={form.control}
                 name="dynamicContent"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-popover p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Dynamic Content</FormLabel>
                       <FormDescription>Allow emails to display dynamic content.</FormDescription>
@@ -166,7 +158,7 @@ export default function GeneralPage() {
                 control={form.control}
                 name="externalImages"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 bg-popover">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Display External Images</FormLabel>
                       <FormDescription>
