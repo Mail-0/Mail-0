@@ -1,5 +1,6 @@
 "use server";
 
+import { getCurrentTimezone } from "@/utils/timezones";
 import { userSettings } from "@zero/db/schema";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -37,11 +38,11 @@ export async function getUserSettings() {
       .where(eq(userSettings.userId, userId))
       .limit(1);
 
-    // Return default settings if user has no settings saved
+    // Return default settings if user has no settings saved, getting the current timezone from the browser
     if (!settings) {
       return {
         language: "en",
-        timezone: "UTC",
+        timezone: getCurrentTimezone(),
         dynamicContent: false,
         externalImages: true,
       };
