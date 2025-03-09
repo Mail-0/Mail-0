@@ -5,17 +5,12 @@ import { useRef, useCallback } from "react";
 import * as React from "react";
 import Link from "next/link";
 
-import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "./sidebar";
+import { SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "./sidebar";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
+import { useStats } from "@/hooks/use-stats";
 import { BASE_URL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useStats } from "@/hooks/use-stats";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -211,7 +206,9 @@ function NavItem(item: NavItemProps & { href: string }) {
       <p className="mt-0.5 text-[13px]">{item.title}</p>
       {stats && stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase()) && (
         <Badge className="ml-auto rounded-md" variant="outline">
-          {stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase())?.count?.toLocaleString()}
+          {stats
+            .find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase())
+            ?.count?.toLocaleString()}
         </Badge>
       )}
     </SidebarMenuButton>
