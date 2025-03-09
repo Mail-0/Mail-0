@@ -92,7 +92,7 @@ export function Draft() {
                         >
                           <div className="mr-4 min-w-0 flex-1">
                             <h3 className="truncate font-medium">
-                              {draft.subject || "No subject"}
+                              {draft.subject || "(no subject)"}
                             </h3>
                             <p className="mt-1 truncate text-sm text-muted-foreground">
                               {draft.message?.substring(0, 50) || "No message"}...

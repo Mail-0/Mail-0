@@ -20,6 +20,7 @@ import { ExpandIcon } from "../icons/animated/expand";
 import { MailDisplaySkeleton } from "./mail-skeleton";
 import { Button } from "@/components/ui/button";
 import { useThread } from "@/hooks/use-threads";
+import ThreadSubject from "./thread-subject";
 import { XIcon } from "../icons/animated/x";
 import ReplyCompose from "./reply-composer";
 import MailDisplay from "./mail-display";
@@ -63,6 +64,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
               </TooltipTrigger>
               <TooltipContent>Close</TooltipContent>
             </Tooltip>
+            <ThreadSubject subject={emailData[0]?.subject} isMobile={isMobile}/>
           </div>
           <div className="flex items-center gap-2">
             <Tooltip>
