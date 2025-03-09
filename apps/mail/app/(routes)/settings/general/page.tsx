@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { saveUserSettings, UserSettings } from "@/actions/settings";
 import { SettingsCard } from "@/components/settings/settings-card";
-import { getCurrentTimezone, TIMEZONES } from "@/utils/timezones";
+import { getBrowserTimezone, TIMEZONES } from "@/utils/timezones";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Clock, LogOut } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
@@ -46,7 +46,7 @@ export default function GeneralPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       language: "en",
-      timezone: getCurrentTimezone(),
+      timezone: getBrowserTimezone(),
       dynamicContent: false,
       externalImages: true,
     },
@@ -132,7 +132,7 @@ export default function GeneralPage() {
                     <FormLabel>Timezone</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-36">
+                        <SelectTrigger className="w-fit">
                           <Clock className="mr-2 h-4 w-4" />
                           <SelectValue placeholder="Select a timezone" />
                         </SelectTrigger>
