@@ -6,6 +6,8 @@ import { X, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { ExtensionPoint } from "@/components/plugin/extension-point";
+import { EXTENSION_POINTS } from "@/constants/extension-points";
 
 interface AISidebarProps {
   className?: string;
@@ -71,17 +73,22 @@ export function AISidebar({ className }: AISidebarProps) {
       >
         <div className="flex h-full flex-col">
           <div className="flex h-full flex-col p-2 px-3">
-            <div className="mb-4 flex items-center justify-end">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:h-fit md:p-2"
-                onClick={() => setOpen(false)}
-              >
-                <X size={20} />
-              </Button>
+            <div className="mb-4 flex items-center justify-between">
+              <ExtensionPoint location={EXTENSION_POINTS.AI.ACTIONS} />
+              <div className="flex items-center gap-2">
+                <ExtensionPoint location={EXTENSION_POINTS.AI.SUGGESTIONS} />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:h-fit md:p-2"
+                  onClick={() => setOpen(false)}
+                >
+                  <X size={20} />
+                </Button>
+              </div>
             </div>
             <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              <ExtensionPoint location={EXTENSION_POINTS.AI.SIDEBAR} />
               <div className="relative h-20 w-20">
                 <Image src="/black-icon.svg" alt="Zero Logo" fill className="dark:hidden" />
                 <Image src="/white-icon.svg" alt="Zero Logo" fill className="hidden dark:block" />
@@ -89,8 +96,10 @@ export function AISidebar({ className }: AISidebarProps) {
               <p className="animate-shine mt-2 hidden bg-gradient-to-r from-neutral-500 via-neutral-300 to-neutral-500 bg-[length:200%_100%] bg-clip-text text-lg text-transparent opacity-50 md:block">
                 Ask Zero a question...
               </p>
+              <ExtensionPoint location={EXTENSION_POINTS.AI.COMPOSE_ASSIST} />
             </div>
             <div className="mt-auto">
+              <ExtensionPoint location={EXTENSION_POINTS.AI.SUMMARY} />
               <AIChat />
             </div>
           </div>

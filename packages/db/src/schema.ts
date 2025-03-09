@@ -1,4 +1,4 @@
-import { pgTableCreator, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTableCreator, text, timestamp, boolean, primaryKey, json } from "drizzle-orm/pg-core";
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
@@ -85,5 +85,35 @@ export const summary = createTable("summary", {
   connectionId: text("connection_id").notNull(),
   saved: boolean("saved").notNull().default(false),
   tags: text("tags"),
-  suggestedReply: text("suggested_reply")
+  suggestedReply: text("suggested_reply"),
 });
+
+export const pluginSettings = createTable(
+  "plugin_settings",
+  {
+    pluginId: text("plugin_id").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    added: boolean("added").notNull().default(true),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.pluginId, table.userId] })],
+);
+
+export const pluginData = createTable(
+  "plugin_data",
+  {
+    pluginId: text("plugin_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    key: text("key").notNull(),
+    data: json("data").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.pluginId, table.userId, table.key] })],
+);

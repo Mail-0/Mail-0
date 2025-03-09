@@ -1,0 +1,2 @@
+ALTER TABLE "mail0_plugin_settings" ADD COLUMN "added" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE "mail0_plugin_settings" ADD CONSTRAINT "mail0_plugin_settings_user_id_mail0_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."mail0_user"("id") ON DELETE no action ON UPDATE no action;

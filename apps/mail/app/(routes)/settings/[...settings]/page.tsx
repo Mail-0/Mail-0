@@ -7,11 +7,13 @@ import ShortcutsPage from "../shortcuts/page";
 import SecurityPage from "../security/page";
 import { useParams } from "next/navigation";
 import GeneralPage from "../general/page";
+import PluginsPage from "../plugins/page";
 
 const settingsPages: Record<string, React.ComponentType> = {
   general: GeneralPage,
   connections: ConnectionsPage,
   security: SecurityPage,
+  plugins: PluginsPage,
   appearance: AppearancePage,
   shortcuts: ShortcutsPage,
   notifications: NotificationsPage,

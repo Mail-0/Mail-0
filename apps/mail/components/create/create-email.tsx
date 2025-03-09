@@ -2,7 +2,9 @@
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { compressText, decompressText, truncateFileName } from "@/lib/utils";
+import { EXTENSION_POINTS } from "@/constants/extension-points";
 import { ArrowUpIcon, Paperclip, Plus, X } from "lucide-react";
+import { ExtensionPoint } from "../plugin/extension-point";
 import { UploadedFileIcon } from "./uploaded-file-icon";
 import { Separator } from "@/components/ui/separator";
 import { SidebarToggle } from "../ui/sidebar-toggle";
@@ -193,7 +195,7 @@ export function CreateEmail() {
     e.preventDefault();
     e.stopPropagation();
     dispatch({ type: "SET_DRAGGING", payload: false });
-    
+
     if (e.dataTransfer.files) {
       dispatch({ type: "ADD_ATTACHMENTS", payload: Array.from(e.dataTransfer.files) });
     }
@@ -206,27 +208,27 @@ export function CreateEmail() {
   React.useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Only trigger if "/" is pressed and no input/textarea is focused
-      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+      if (e.key === "/" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) {
         e.preventDefault();
         toInputRef.current?.focus();
       }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, []);
 
   return (
-    <div 
-      className="bg-offsetLight dark:bg-offsetDark flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm relative"
+    <div
+      className="bg-offsetLight dark:bg-offsetDark relative flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isDragging && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center border-2 border-dashed border-primary/30 rounded-2xl m-4">
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <Paperclip className="h-12 w-12 text-muted-foreground" />
+        <div className="bg-background/80 border-primary/30 absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-sm">
+          <div className="text-muted-foreground flex flex-col items-center gap-2">
+            <Paperclip className="text-muted-foreground h-12 w-12" />
             <p className="text-lg font-medium">Drop files to attach</p>
           </div>
         </div>
@@ -238,7 +240,7 @@ export function CreateEmail() {
       <div className="relative flex h-full flex-col">
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl space-y-12 px-4 pt-4 md:px-2">
-            <div className="space-y-3 md:px-1">
+            <form className="space-y-3 md:px-1" id="create-email">
               <div className="flex items-center">
                 <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                   To
@@ -247,7 +249,7 @@ export function CreateEmail() {
                   {state.toEmails.map((email, index) => (
                     <div
                       key={index}
-                      className="border flex items-center gap-1 rounded-md px-2 py-1  font-medium text-sm"
+                      className="flex items-center gap-1 rounded-md border px-2 py-1 text-sm font-medium"
                     >
                       <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
                         {email}
@@ -264,7 +266,7 @@ export function CreateEmail() {
                   <input
                     ref={toInputRef}
                     type="email"
-                    className="text-md min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] opacity-50 focus:outline-none relative left-[3px]"
+                    className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent opacity-50 placeholder:text-[#616161] focus:outline-none"
                     placeholder={state.toEmails.length ? "" : "luke@example.com"}
                     value={toInput}
                     onChange={(e) => dispatch({ type: "SET_TO_INPUT", payload: e.target.value })}
@@ -285,13 +287,15 @@ export function CreateEmail() {
                 </div>
               </div>
 
+              <ExtensionPoint location={EXTENSION_POINTS.COMPOSE.RECIPIENTS} />
+
               <div className="flex items-center">
                 <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                   Subject
                 </div>
                 <input
                   type="text"
-                  className="placeholder:text-[#616161] text-md relative left-[7.5px] w-full bg-transparent placeholder:opacity-50 focus:outline-none"
+                  className="text-md relative left-[7.5px] w-full bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
                   placeholder="Subject"
                   value={subjectInput}
                   onChange={(e) => dispatch({ type: "SET_SUBJECT_INPUT", payload: e.target.value })}
@@ -311,7 +315,7 @@ export function CreateEmail() {
                   />
                 </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
 
@@ -385,6 +389,7 @@ export function CreateEmail() {
               multiple
               onChange={handleAttachment}
             />
+            <ExtensionPoint location={EXTENSION_POINTS.COMPOSE.SEND_BUTTON} />
             <Button
               variant="default"
               className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-24"
