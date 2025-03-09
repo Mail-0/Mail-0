@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SettingsCard } from "@/components/settings/settings-card";
-import { emailProviders } from "@/constants/emailProviders";
+import { AddConnectionDialog } from "@/components/connection/add";
 import { useConnections } from "@/hooks/use-connections";
 import { deleteConnection } from "@/actions/connections";
-import { AddConnectionDialog } from "@/components/connection/add";
 import { Skeleton } from "@/components/ui/skeleton";
+import { emailProviders } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import { Trash } from "lucide-react";
@@ -45,29 +45,29 @@ export default function ConnectionsPage() {
       <SettingsCard title="Email Connections" description="Connect your email accounts to Zero.">
         <div className="space-y-6">
           {isLoading ? (
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-lg border p-4 bg-popover"
+                  className="bg-popover flex items-center justify-between rounded-lg border p-4"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     <Skeleton className="h-12 w-12 rounded-lg" />
-                    <div className="flex-col gap-1 flex">
+                    <div className="flex flex-col gap-1">
                       <Skeleton className="h-4 w-full lg:w-32" />
                       <Skeleton className="h-3 w-full lg:w-48" />
                     </div>
                   </div>
-                  <Skeleton className="h-8 w-8 rounded-full ml-4" />
+                  <Skeleton className="ml-4 h-8 w-8 rounded-full" />
                 </div>
               ))}
             </div>
           ) : connections?.length ? (
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
               {connections.map((connection) => (
                 <div
                   key={connection.id}
-                  className="flex items-center justify-between rounded-lg border p-4 bg-popover"
+                  className="bg-popover flex items-center justify-between rounded-lg border p-4"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     {connection.picture ? (
@@ -81,7 +81,7 @@ export default function ConnectionsPage() {
                     ) : (
                       <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
                         <svg viewBox="0 0 24 24" className="text-primary h-6 w-6">
-                            <path fill="currentColor" d={emailProviders[0]!.icon} />
+                          <path fill="currentColor" d={emailProviders[0]!.icon} />
                         </svg>
                       </div>
                     )}
@@ -123,7 +123,7 @@ export default function ConnectionsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-muted-foreground hover:text-primary shrink-0 ml-4"
+                        className="text-muted-foreground hover:text-primary ml-4 shrink-0"
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
@@ -150,9 +150,7 @@ export default function ConnectionsPage() {
             </div>
           ) : null}
 
-          <AddConnectionDialog className="w-fit hover:bg-transparent">
-
-          </AddConnectionDialog>
+          <AddConnectionDialog className="w-fit hover:bg-transparent"></AddConnectionDialog>
         </div>
       </SettingsCard>
     </div>
