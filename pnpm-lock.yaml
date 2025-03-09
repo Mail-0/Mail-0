@@ -39,6 +39,9 @@ importers:
 
   apps/mail:
     dependencies:
+      '@coinbase/cookie-manager':
+        specifier: ^1.1.8
+        version: 1.1.8
       '@hookform/resolvers':
         specifier: 4.1.2
         version: 4.1.2(react-hook-form@7.54.2(react@19.0.0))
@@ -126,6 +129,9 @@ importers:
       '@vercel/analytics':
         specifier: 1.5.0
         version: 1.5.0(next@15.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      '@vercel/functions':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@zero/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -377,6 +383,9 @@ packages:
 
   '@cfcs/core@0.0.6':
     resolution: {integrity: sha512-FxfJMwoLB8MEMConeXUCqtMGqxdtePQxRBOiGip9ULcYYam3WfCgoY6xdnMaSkYvRvmosp5iuG+TiPofm65+Pw==}
+
+  '@coinbase/cookie-manager@1.1.8':
+    resolution: {integrity: sha512-D57yF4uUuiKjfYRpBZFsGj+ME0dICS14K8JnoexVA/9QY+/W97ORz5tXG53p5upwuPLOBqte8ZoWJa+hBgGCSQ==}
 
   '@daybrush/utils@1.13.0':
     resolution: {integrity: sha512-ALK12C6SQNNHw1enXK+UO8bdyQ+jaWNQ1Af7Z3FNxeAwjYhQT7do+TRE4RASAJ3ObaS2+TJ7TXR3oz2Gzbw0PQ==}
@@ -2133,6 +2142,15 @@ packages:
       vue:
         optional: true
       vue-router:
+        optional: true
+
+  '@vercel/functions@2.0.0':
+    resolution: {integrity: sha512-BSwIihLHoV18gerKZJyGuqd3rtaYM6rJvET1kOwKktshucyaHXTJel7Cxegs+sdX0NZqsX4LO2MFnMU2jG01Cw==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@aws-sdk/credential-provider-web-identity': '*'
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-web-identity':
         optional: true
 
   '@xobotyi/scrollbar-width@1.9.5':
@@ -5045,6 +5063,10 @@ snapshots:
     dependencies:
       '@egjs/component': 3.0.5
 
+  '@coinbase/cookie-manager@1.1.8':
+    dependencies:
+      js-cookie: 3.0.5
+
   '@daybrush/utils@1.13.0': {}
 
   '@drizzle-team/brocli@0.10.2': {}
@@ -6645,6 +6667,8 @@ snapshots:
     optionalDependencies:
       next: 15.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react: 19.0.0
+
+  '@vercel/functions@2.0.0': {}
 
   '@xobotyi/scrollbar-width@1.9.5': {}
 
