@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { saveUserSettings, UserSettings } from "@/actions/settings";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Clock, LogOut } from "lucide-react";
@@ -24,6 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
 
@@ -36,7 +38,8 @@ const formSchema = z.object({
 
 export default function GeneralPage() {
   const router = useRouter();
-  const { settings, updateSettings, isPending } = useSettings();
+  const [isPending, setIsPending] = useState(false);
+  const { settings, mutate } = useSettings();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,8 +52,18 @@ export default function GeneralPage() {
     values: settings,
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    updateSettings(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setIsPending(true);
+      await saveUserSettings(values as UserSettings);
+      await mutate();
+      toast.success("Settings saved successfully");
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      toast.error("Failed to save settings");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   const handleSignOut = async () => {
