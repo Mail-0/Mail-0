@@ -1,14 +1,8 @@
 // timezone helpers
 
-const getBrowserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+export const getBrowserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-export const getCurrentTimezone = () => {
-  const browserTimezone = getBrowserTimezone();
-  const timezone = TIMEZONES[browserTimezone as keyof typeof TIMEZONES] ?? "UTC";
-  return timezone;
-};
-
-// Not a complete list, but a good start
+// Not a complete list, didn't want to overload the select with too many options.
 export const TIMEZONES = {
   "Pacific/Midway": "(GMT-11:00) Midway Island, Samoa",
   "Pacific/Honolulu": "(GMT-10:00) Hawaii",
@@ -84,7 +78,8 @@ export const TIMEZONES = {
   "Asia/Vladivostok": "(GMT+10:00) Vladivostok",
   "Pacific/Guam": "(GMT+10:00) Guam, Port Moresby",
   "Australia/Adelaide": "(GMT+10:30) Adelaide",
-  "Australia/Sydney": "(GMT+11:00) Canberra, Melbourne, Sydney",
+  "Australia/Melbourne": "(GMT+11:00) Melbourne",
+  "Australia/Sydney": "(GMT+11:00) Sydney",
   "Australia/Hobart": "(GMT+11:00) Hobart",
   "Asia/Magadan": "(GMT+11:00) Magadan, Solomon Islands, New Caledonia",
   "Asia/Kamchatka": "(GMT+12:00) Kamchatka, Marshall Islands",
