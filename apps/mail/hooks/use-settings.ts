@@ -1,18 +1,25 @@
 import { getUserSettings, saveUserSettings, UserSettings } from "@/actions/settings";
+import { useSession } from "@/lib/auth-client";
 import { useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
 export function useSettings() {
   const [isPending, setIsPending] = useState(false);
-  const { data, error, isLoading, mutate } = useSWR("user-settings", async () => {
-    try {
-      return await getUserSettings();
-    } catch (error) {
-      console.error("Failed to load settings:", error);
-      throw error;
-    }
-  });
+  const { data: session } = useSession();
+
+  const userId = session?.user.id;
+  const { data, error, isLoading, mutate } = useSWR(
+    userId ? [`user-settings`, userId] : null,
+    async () => {
+      try {
+        return await getUserSettings();
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+        throw error;
+      }
+    },
+  );
 
   const updateSettings = async (settings: UserSettings) => {
     try {
