@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/select";
 import { saveUserSettings, UserSettings } from "@/actions/settings";
 import { SettingsCard } from "@/components/settings/settings-card";
+import { getCurrentTimezone, TIMEZONES } from "@/utils/timezones";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Clock, LogOut } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { TIMEZONES } from "@/utils/timezones";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -46,7 +46,7 @@ export default function GeneralPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       language: "en",
-      timezone: "UTC",
+      timezone: getCurrentTimezone(),
       dynamicContent: false,
       externalImages: true,
     },
