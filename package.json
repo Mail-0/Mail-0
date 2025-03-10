@@ -38,6 +38,11 @@
   },
   "packageManager": "pnpm@10.2.0",
   "dependencies": {
-    "@vercel/analytics": "1.5.0"
+    "@tiptap/extension-link": "^2.11.5",
+    "@tiptap/pm": "2.11.5",
+    "@tiptap/react": "2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
+    "@vercel/analytics": "1.5.0",
+    "input-otp": "^1.4.2"
   }
 }
