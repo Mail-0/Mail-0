@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   FileCode,
 } from "lucide-react";
+import { Discord, Twitter } from "@/components/icons/icons";
 import {
   Area,
   AreaChart,
@@ -28,6 +29,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { fetcher } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
@@ -56,7 +58,7 @@ interface ActivityData {
 
 const excludedUsernames = ["bot1", "dependabot", "github-actions"];
 const coreTeamMembers = ["nizzyabi", "ahmetskilinc", "ripgrim", "needlexo", "praashh", "mrgsub"];
-const REPOSITORY = "Mail-0/Mail-0";
+const REPOSITORY = "Mail-0/Zero";
 
 const specialRoles: Record<string, { role: string; twitter?: string; website?: string }> = {
   nizzyabi: {
@@ -120,11 +122,32 @@ export default function OpenPage() {
   const [showAllContributors, setShowAllContributors] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allContributors, setAllContributors] = useState<Contributor[]>([]);
+  const [isRendered, setIsRendered] = useState(false);
 
-  const { data: contributors } = useSWR<Contributor[]>(
-    `https://api.github.com/repos/${REPOSITORY}/contributors`,
+  useEffect(() => setIsRendered(true), []);
+
+  const { data: initialContributors } = useSWR<Contributor[]>(
+    `https://api.github.com/repos/${REPOSITORY}/contributors?per_page=100&page=1`,
     fetcher,
   );
+
+  const { data: additionalContributors } = useSWR<Contributor[]>(
+    initialContributors?.length === 100 
+      ? `https://api.github.com/repos/${REPOSITORY}/contributors?per_page=100&page=2` 
+      : null,
+    fetcher,
+  );
+
+  useEffect(() => {
+    if (initialContributors) {
+      if (additionalContributors) {
+        setAllContributors([...initialContributors, ...additionalContributors]);
+      } else {
+        setAllContributors(initialContributors);
+      }
+    }
+  }, [initialContributors, additionalContributors]);
 
   const { data: repoData, error: repoError } = useSWR(
     `https://api.github.com/repos/${REPOSITORY}`,
@@ -143,7 +166,7 @@ export default function OpenPage() {
 
   const filteredCoreTeam = useMemo(
     () =>
-      contributors
+      allContributors
         ?.filter(
           (contributor) =>
             !excludedUsernames.includes(contributor.login) &&
@@ -152,12 +175,12 @@ export default function OpenPage() {
             ),
         )
         .sort((a, b) => b.contributions - a.contributions),
-    [contributors],
+    [allContributors],
   );
 
   const filteredContributors = useMemo(
     () =>
-      contributors
+      allContributors
         ?.filter(
           (contributor) =>
             !excludedUsernames.includes(contributor.login) &&
@@ -166,7 +189,7 @@ export default function OpenPage() {
             ),
         )
         .sort((a, b) => b.contributions - a.contributions),
-    [contributors],
+    [allContributors],
   );
 
   useEffect(() => {
@@ -316,28 +339,33 @@ export default function OpenPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-black text-white">
+    <div className="min-h-screen w-full bg-white dark:bg-neutral-950 text-black dark:text-white">
       <div className="container mx-auto max-w-6xl px-4 py-8">
+        {/* Header with theme toggle */}
+        <div className="flex justify-end mb-6">
+          <ThemeToggle />
+        </div>
+        
         {/* Project Stats */}
         <div className="mb-8 overflow-hidden rounded-xl border bg-gradient-to-b from-white/50 to-white/10 p-6 backdrop-blur-sm dark:border-neutral-700 dark:from-neutral-900/50 dark:to-neutral-900/30">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Image
-                  src="/black-icon.svg"
-                  alt="0.email Logo"
-                  width={32}
-                  height={32}
-                  className="dark:hidden"
-                />
                 <Link href="/">
-                  <Image
-                    src="/white-icon.svg"
-                    alt="0.email Logo"
-                    width={32}
-                    height={32}
-                    className="hidden dark:block"
-                  />
+                  <div className="relative h-8 w-8">
+                    <Image
+                      src="/black-icon.svg"
+                      alt="0.email Logo"
+                      fill
+                      className="object-contain dark:hidden"
+                    />
+                    <Image
+                      src="/white-icon.svg"
+                      alt="0.email Logo"
+                      fill
+                      className="hidden object-contain dark:block"
+                    />
+                  </div>
                 </Link>
               </div>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -653,14 +681,7 @@ export default function OpenPage() {
                         target="_blank"
                         className="rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
                       >
-                        <svg
-                          className="h-4 w-4"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                        </svg>
+                        <Twitter className="h-4 w-4" />
                       </Link>
                     )}
                     {specialRoles[member.login.toLowerCase()]?.website && (
@@ -693,14 +714,13 @@ export default function OpenPage() {
         </div>
 
         {/* Contributors Section */}
-        <div className="space-y-6">
+        <div className="space-y-6 mb-16">
           <div className="text-center">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-900/80 dark:text-white">
               Contributors
             </h1>
             <div className="text-muted-foreground mt-2 flex items-center justify-center gap-2">
-              <FileCode className="h-4 w-4" />
-              <span>Top {filteredContributors?.length} contributors</span>
+              <span>Thank you to all the contributors who have helped make 0.email possible</span>
             </div>
           </div>
 
@@ -785,8 +805,7 @@ export default function OpenPage() {
                   <ChartControls
                     showAll={showAllContributors}
                     setShowAll={setShowAllContributors}
-                    // @ts-expect-error - contributors is not defined
-                    total={contributors?.length - coreTeamMembers.length}
+                    total={filteredContributors?.length || 0}
                   />
 
                   <ResponsiveContainer width="100%" height={400}>
@@ -799,7 +818,7 @@ export default function OpenPage() {
                         interval={0}
                         tick={(props) => {
                           const { x, y, payload } = props;
-                          const contributor = contributors?.find((c) => c.login === payload.value);
+                          const contributor = allContributors?.find((c) => c.login === payload.value);
 
                           return (
                             <g transform={`translate(${x},${y})`}>
@@ -867,6 +886,125 @@ export default function OpenPage() {
             </Tabs>
           </div>
         </div>
+
+        <div className="mb-8">
+          <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-neutral-50 to-white shadow-sm dark:border-neutral-800 dark:from-neutral-900/80 dark:to-neutral-900/30">
+            <div className="absolute inset-0 opacity-20 dark:opacity-20">
+            </div>
+
+            <div className="relative p-6">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="w-full md:w-2/3">
+                  <div className="inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
+                    <Github className="mr-1.5 h-3.5 w-3.5" />
+                    We are open source
+                  </div>
+                  <h2 className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
+                    Let&apos;s build the future of email together
+                  </h2>
+                  <p className="mt-3 text-neutral-600 dark:text-neutral-300">
+                    Whether you&apos;re fixing bugs, adding features, or improving documentation, every contribution matters.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Button
+                      asChild
+                      className="relative overflow-hidden bg-neutral-900 text-white transition-all hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+                    >
+                      <Link href={`https://github.com/${REPOSITORY}/blob/main/.github/CONTRIBUTING.md`} target="_blank">
+                        <span className="relative z-10 flex items-center">
+                          <GitGraph className="mr-2 h-4 w-4" />
+                          Start Contributing
+                        </span>
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="gap-2 border-neutral-200 bg-white/80 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900/50 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-white"
+                    >
+                      <Link href={`https://github.com/${REPOSITORY}/issues`} target="_blank">
+                        <MessageCircle className="h-4 w-4" />
+                        Open Issues
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="hidden md:block md:w-1/3">
+                  <div className="space-y-4 rounded-xl border border-neutral-200 bg-white/80 p-5 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/80">
+                    <div className="flex items-center gap-4">
+                      <div className="flex -space-x-2">
+                        {filteredContributors?.slice(0, 5).map((contributor) => (
+                          <Avatar 
+                            key={contributor.login} 
+                            className="h-8 w-8 border-2 border-white dark:border-neutral-900"
+                          >
+                            <AvatarImage src={contributor.avatar_url} alt={contributor.login} />
+                            <AvatarFallback className="text-xs">
+                              {contributor.login.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {filteredContributors && filteredContributors.length > 5 && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-neutral-100 text-xs font-medium text-neutral-800 dark:border-neutral-900 dark:bg-neutral-800 dark:text-neutral-200">
+                            +{filteredContributors.length - 5}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-sm text-neutral-600 dark:text-neutral-300">
+                        <span className="font-semibold text-neutral-900 dark:text-white">
+                          {filteredContributors?.length || 0}
+                        </span>{" "}
+                        contributors
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-neutral-50 p-2 dark:bg-neutral-800/50">
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">Stars</div>
+                        <div className="mt-1 flex items-center gap-1">
+                          <Star className="h-3.5 w-3.5 text-neutral-700 dark:text-neutral-300" />
+                          <span className="text-sm font-semibold text-neutral-900 dark:text-white">
+                            {repoStats.stars}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-neutral-50 p-2 dark:bg-neutral-800/50">
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">Forks</div>
+                        <div className="mt-1 flex items-center gap-1">
+                          <GitFork className="h-3.5 w-3.5 text-neutral-700 dark:text-neutral-300" />
+                          <span className="text-sm font-semibold text-neutral-900 dark:text-white">
+                            {repoStats.forks}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-4 mb-6 mt-2">
+          <Link
+            href="https://discord.gg/BCFr6FFt"
+            target="_blank"
+            className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
+            aria-label="Join our Discord"
+          >
+            <Discord className="h-4 w-4" />
+          </Link>
+          <Link
+            href="https://x.com/zerodotemail"
+            target="_blank"
+            className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
+            aria-label="Follow us on X (Twitter)"
+          >
+            <Twitter className="h-4 w-4" />
+          </Link>
+        </div>
+
       </div>
     </div>
   );

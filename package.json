@@ -15,7 +15,7 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
-    "db:depencies": "cd packages/db && pnpm install",
+    "db:dependencies": "cd packages/db && pnpm install",
     "db:generate": "cd packages/db && pnpm run db:generate",
     "db:migrate": "cd packages/db && pnpm run db:migrate",
     "db:push": "cd packages/db && pnpm run db:push",

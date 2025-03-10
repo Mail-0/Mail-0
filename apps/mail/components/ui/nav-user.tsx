@@ -146,7 +146,7 @@ export function NavUser() {
           </div>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => window.open("https://github.com/Mail-0/Mail-0", "_blank")}
+          onClick={() => window.open("https://github.com/Mail-0/Zero", "_blank")}
         >
           <div className="flex cursor-pointer items-center gap-2 text-[13px]">
             <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
