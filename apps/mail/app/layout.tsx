@@ -6,7 +6,8 @@ import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 import "./globals.css";
-
+import localFont from 'next/font/local'
+ 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,6 +18,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const pixy = localFont({ variable: '--font-pixy', src: '../public/fonts/PIXY.woff2' })
+
 export const metadata = siteConfig;
 
 export default function RootLayout({
@@ -26,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
+      <body className={cn(geistSans.variable, geistMono.variable, pixy.variable, "antialiased")}>
         <Providers attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
           <Toast />

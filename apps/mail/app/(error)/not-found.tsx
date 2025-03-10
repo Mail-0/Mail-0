@@ -1,42 +1,61 @@
-"use client";
-
-import { AlertCircle, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import Marquee from "./_components/marquee"
+import Image from 'next/image';
+import blackIcon from '@/public/black-icon.svg';
+import whiteIcon from '@/public/white-icon.svg';
 
 export function NotFound() {
-  const router = useRouter();
-
   return (
-    <div className="flex w-full items-center justify-center bg-white text-center dark:bg-background">
-      <div className="flex-col items-center justify-center dark:text-gray-100 md:flex">
-        <div className="relative">
-          <h1 className="select-none text-[150px] font-bold text-muted-foreground/20">404</h1>
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <AlertCircle className="h-20 w-20 text-muted-foreground" />
+    <div className="relative flex w-full items-center justify-center px-4 md:px-0 overflow-hidden ">
+      <div className="absolute w-full h-full">
+        <Marquee
+          direction="diagonal"
+          speed={0.5}
+          squareSize={40}
+          borderColor="#333"
+          hoverFillColor="#222"
+        />
+      </div>
+
+      <div className="absolute top-0 left-4">
+        <Link
+          href="/"
+          className={cn("tracking-tighter uppercase font-pixel text-6xl font-bold")}
+        >
+          {"<<<"} Home
+        </Link>
+      </div>
+      <div className="flex flex-col items-center justify-center text-center z-10 tracking-tightest">
+        <div className="flex font-bold items-center justify-center gap-2 relative select-none">
+          <div className="text-[35vw]">
+            4
+          </div>
+          <div className="flex items-center gap-2 size-fill pointer-events-none">
+            <Image
+              src={blackIcon}
+              alt="0.email Logo"
+              sizes="100vw"
+              className="dark:hidden h-auto w-[25vw]"
+              priority
+            />
+            <Image
+              src={whiteIcon}
+              alt="0.email Logo"
+              sizes="100vw"
+              className="hidden dark:block h-auto w-[25vw]"
+              priority
+            />
+          </div>
+          <div className="text-[35vw]">
+            4
           </div>
         </div>
-
-        {/* Message */}
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight">Page Not Found</h2>
-          <p className="text-muted-foreground">
-            Oops! The page you&apos;re looking for doesn&apos;t exist or has been moved.
-          </p>
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-2 flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="gap-2 text-muted-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Go Back
-          </Button>
-        </div>
       </div>
+      {/* <div className="absolute">
+        <a>Home</a>
+      </div> */}
     </div>
+
   );
 }
