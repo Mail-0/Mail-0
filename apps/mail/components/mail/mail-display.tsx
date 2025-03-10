@@ -1,17 +1,18 @@
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { ChevronDown } from "lucide-react";
+import { useSummary } from "@/hooks/use-summary";
+import { TextShimmer } from "../ui/text-shimmer";
 import { BellOff, Lock } from "lucide-react";
 import { Separator } from "../ui/separator";
+import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 import { MailIframe } from "./mail-iframe";
+import { ChevronDown } from "lucide-react";
 import { ParsedMessage } from "@/types";
 import { Button } from "../ui/button";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useSummary } from "@/hooks/use-summary";
-import { TextShimmer } from "../ui/text-shimmer";
 
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState("");
@@ -22,8 +23,7 @@ const StreamingText = ({ text }: { text: string }) => {
     let currentIndex = 0;
     setIsComplete(false);
     setIsThinking(true);
-    
-    
+
     const thinkingTimeout = setTimeout(() => {
       setIsThinking(false);
       setDisplayText("");
@@ -80,7 +80,15 @@ type Props = {
 const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
-  const { data } = demo ? { data: { content: 'This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.' } } : useSummary(emailData.id)
+  const { data } = demo
+    ? {
+        data: {
+          content:
+            "This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.",
+        },
+      }
+    : useSummary(emailData.id);
+  const t = useTranslations("common.mailDisplay");
 
   useEffect(() => {
     if (index === 0) {
@@ -93,26 +101,31 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
       <div className="relative h-full overflow-y-auto">
         <div className="flex flex-col gap-4 p-4 pb-2 transition-all duration-200">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex justify-center items-start gap-4">
+            <div className="flex items-start justify-center gap-4">
               <Avatar className="rounded-md">
                 <AvatarImage alt={emailData?.sender?.name} className="rounded-md" />
-                <AvatarFallback className={cn("rounded-md", demo && "compose-gradient-animated text-black font-bold")}>
+                <AvatarFallback
+                  className={cn(
+                    "rounded-md",
+                    demo && "compose-gradient-animated font-bold text-black",
+                  )}
+                >
                   {emailData?.sender?.name
                     .split(" ")
                     .map((chunk) => chunk[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 relative bottom-1">
+              <div className="relative bottom-1 flex-1">
                 <div className="flex items-center justify-start gap-2">
                   <span className="font-semibold">{emailData?.sender?.name}</span>
-                  <span className="flex grow-0 items-center gap-2 text-sm text-muted-foreground">
+                  <span className="text-muted-foreground flex grow-0 items-center gap-2 text-sm">
                     <span>{emailData?.sender?.email}</span>
                     {isMuted && <BellOff className="h-4 w-4" />}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <time className="text-xs text-muted-foreground">
+                  <time className="text-muted-foreground text-xs">
                     {format(new Date(emailData?.receivedOn), "PPp")}
                   </time>
                   <Popover open={openDetailsPopover} onOpenChange={setOpenDetailsPopover}>
@@ -123,18 +136,18 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
                         className="h-auto p-0 text-xs underline hover:bg-transparent"
                         onClick={() => setOpenDetailsPopover(true)}
                       >
-                        Details
+                        {t("details")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-[420px] rounded-lg p-3 shadow-lg border"
+                      className="w-[420px] rounded-lg border p-3 shadow-lg"
                       onBlur={() => setOpenDetailsPopover(false)}
                     >
                       <div className="space-y-1 text-sm">
                         <div className="flex">
-                          <span className="w-24 text-end text-gray-500">From:</span>
+                          <span className="w-24 text-end text-gray-500">{t("from")}:</span>
                           <div className="ml-3">
-                            <span className="pr-1 font-bold text-muted-foreground">
+                            <span className="text-muted-foreground pr-1 font-bold">
                               {emailData?.sender?.name}
                             </span>
                             <span className="text-muted-foreground">
@@ -143,67 +156,77 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
                           </div>
                         </div>
                         <div className="flex">
-                          <span className="w-24 text-end text-gray-500">To:</span>
-                          <span className="ml-3 text-muted-foreground">
+                          <span className="w-24 text-end text-gray-500">{t("to")}:</span>
+                          <span className="text-muted-foreground ml-3">
                             {emailData?.sender?.email}
                           </span>
                         </div>
                         <div className="flex">
                           <span className="w-24 text-end text-gray-500">Cc:</span>
-                          <span className="ml-3 text-muted-foreground">
+                          <span className="text-muted-foreground ml-3">
                             {emailData?.sender?.email}
                           </span>
                         </div>
                         <div className="flex">
-                          <span className="w-24 text-end text-gray-500">Date:</span>
-                          <span className="ml-3 text-muted-foreground">
+                          <span className="w-24 text-end text-gray-500">{t("date")}:</span>
+                          <span className="text-muted-foreground ml-3">
                             {format(new Date(emailData?.receivedOn), "PPpp")}
                           </span>
                         </div>
                         <div className="flex">
-                          <span className="w-24 text-end text-gray-500">Mailed-By:</span>
-                          <span className="ml-3 text-muted-foreground">
+                          <span className="w-24 text-end text-gray-500">{t("mailedBy")}:</span>
+                          <span className="text-muted-foreground ml-3">
                             {emailData?.sender?.email}
                           </span>
                         </div>
                         <div className="flex">
-                          <span className="w-24 text-end text-gray-500">Signed-By:</span>
-                          <span className="ml-3 text-muted-foreground">
+                          <span className="w-24 text-end text-gray-500">{t("signedBy")}:</span>
+                          <span className="text-muted-foreground ml-3">
                             {emailData?.sender?.email}
                           </span>
                         </div>
                         <div className="flex items-center">
-                          <span className="w-24 text-end text-gray-500">Security:</span>
-                          <div className="ml-3 flex items-center gap-1 text-muted-foreground">
-                            <Lock className="h-4 w-4 text-green-600" /> Standard encryption (TLS)
+                          <span className="w-24 text-end text-gray-500">{t("security")}:</span>
+                          <div className="text-muted-foreground ml-3 flex items-center gap-1">
+                            <Lock className="h-4 w-4 text-green-600" /> {t("standardEncryption")}
                           </div>
                         </div>
                       </div>
                     </PopoverContent>
                   </Popover>
                   <p onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer">
-                    <span className={cn(
-                      "transition-transform duration-300 inline-block relative top-0.5",
-                      !isCollapsed && "rotate-180"
-                    )}>
+                    <span
+                      className={cn(
+                        "relative top-0.5 inline-block transition-transform duration-300",
+                        !isCollapsed && "rotate-180",
+                      )}
+                    >
                       <ChevronDown className="h-4 w-4" />
                     </span>
                   </p>
                 </div>
               </div>
             </div>
-            {data ? <div className="relative top-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button size={'icon'} variant='ghost' className='rounded-md'>
-                    <Image src="/ai.svg" alt="logo" className="h-6 w-6" width={100} height={100} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="rounded-lg border p-3 shadow-lg relative -left-24">
-                  <StreamingText text={data.content} />
-                </PopoverContent>
-              </Popover>
-            </div> : null}
+            {data ? (
+              <div className="relative top-1">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size={"icon"} variant="ghost" className="rounded-md">
+                      <Image
+                        src="/ai.svg"
+                        alt="logo"
+                        className="h-6 w-6"
+                        width={100}
+                        height={100}
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="relative -left-24 rounded-lg border p-3 shadow-lg">
+                    <StreamingText text={data.content} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -243,7 +266,7 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
                   className="flex h-[500px] w-full items-center justify-center"
                   style={{ minHeight: "500px" }}
                 >
-                  <div className="h-32 w-32 animate-pulse rounded-full bg-secondary" />
+                  <div className="bg-secondary h-32 w-32 animate-pulse rounded-full" />
                 </div>
               )}
             </div>

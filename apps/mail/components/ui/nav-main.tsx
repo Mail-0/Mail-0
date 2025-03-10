@@ -5,17 +5,14 @@ import { useRef, useCallback } from "react";
 import * as React from "react";
 import Link from "next/link";
 
-import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "./sidebar";
+import { SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "./sidebar";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MessageKeys, useTranslations } from "next-intl";
+import { MessageKey } from "@/config/navigation";
 import { Badge } from "@/components/ui/badge";
+import { useStats } from "@/hooks/use-stats";
 import { BASE_URL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useStats } from "@/hooks/use-stats";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -179,6 +176,8 @@ function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
 
+  const t = useTranslations();
+
   if (item.disabled) {
     return (
       <SidebarMenuButton
@@ -186,7 +185,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="mt-0.5 text-[13px]">{item.title}</p>
+        <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}s</p>
       </SidebarMenuButton>
     );
   }
@@ -208,10 +207,12 @@ function NavItem(item: NavItemProps & { href: string }) {
       )}
     >
       {item.icon && <item.icon ref={iconRef} className="mr-2" />}
-      <p className="mt-0.5 text-[13px]">{item.title}</p>
+      <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
       {stats && stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase()) && (
         <Badge className="ml-auto rounded-md" variant="outline">
-          {stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase())?.count?.toLocaleString()}
+          {stats
+            .find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase())
+            ?.count?.toLocaleString()}
         </Badge>
       )}
     </SidebarMenuButton>
